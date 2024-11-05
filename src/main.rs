@@ -1,7 +1,11 @@
+mod app_info;
 mod repl;
+
+use app_info::AppInfo;
 
 use atty::Stream;
 use clap::{Arg, Command};
+use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -35,12 +39,11 @@ fn parse_lines(lines: Vec<String>, state: &mut ReplState) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let version = env!("CARGO_PKG_VERSION");
-    let description = env!("CARGO_PKG_DESCRIPTION");
+    let app_info = AppInfo::from_env();
 
-    let matches = Command::new("Lox Language REPL")
-        .version(version)
-        .about(description)
+    let matches = Command::new(app_info.name)
+        .version(app_info.version)
+        .about(app_info.description)
         .arg(
             Arg::new("file")
                 .value_name("FILE")
