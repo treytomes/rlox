@@ -1,0 +1,12 @@
+[package]
+name = "rlox"
+version = "0.1.0"
+edition = "2021"
+authors = ["Trey Tomes <trey.tomes@gmail.com>"]
+description = "An implementation of the Lox language in Rust."
+
+[dependencies]
+atty = "0.2.14"
+clap = { version = "4.5.20", features = ["derive"] }
+signal-hook = "0.3.17"
+termion = "4.0.3"
