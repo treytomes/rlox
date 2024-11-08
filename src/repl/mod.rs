@@ -12,7 +12,6 @@ pub type StopFlag = Arc<AtomicBool>;
 
 const PROMPT: &str = "\r\n> ";
 
-// Handle signal registration in its own function.
 fn setup_signal_handler() -> io::Result<StopFlag> {
     let stop_flag = Arc::new(AtomicBool::new(false));
     flag::register(SIGTSTP, Arc::clone(&stop_flag)).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
@@ -99,7 +98,7 @@ fn process_key_event<TCallback, TState>(key: Key, input_buffer: &mut String, cur
         Key::Left => handle_cursor_left(cursor_position),
         Key::Right => handle_cursor_right(input_buffer, cursor_position),
         Key::Char(c) => handle_character(input_buffer, cursor_position, c),
-        Key::Ctrl('z') | Key::Ctrl('c') => stop_flag.store(true, Ordering::Relaxed),
+        Key::Ctrl('c') | Key::Ctrl('d') | Key::Ctrl('z') => stop_flag.store(true, Ordering::Relaxed),
         _ => {},
     }
 }
