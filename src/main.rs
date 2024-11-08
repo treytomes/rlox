@@ -39,7 +39,19 @@ fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
     match tokens {
         Ok(tokens) => print_tokens(tokens),
         Err(err) => {
-            eprint!("Error scanning tokens: {}\r\n", err);
+            eprint!("Error: {}\r\n", err);
+
+            // Take the 3rd line out the input text.
+            let lines: Vec<&str> = input.split('\n').collect();
+            let line = lines[err.line - 1];
+
+            // Convert line to a string and get the length of it.
+            let len = err.line.to_string().len();
+
+            eprint!("\r\n"); 
+            eprint!("{} | {}\r\n", err.line, line);
+            eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
+
             state.had_error = true;
         },
     }
