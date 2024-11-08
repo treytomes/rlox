@@ -1,6 +1,6 @@
 mod app_info;
-mod repl;
 mod lexer;
+mod repl;
 
 use app_info::AppInfo;
 use atty::Stream;
@@ -26,7 +26,10 @@ fn print_tokens(tokens: Vec<lexer::Token>) {
 
 fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
     state.command_count += 1;
-    print!("\r\nCallback: You entered '{}', command count: {}\r\n", input, state.command_count);
+    print!(
+        "\r\nCallback: You entered '{}', command count: {}\r\n",
+        input, state.command_count
+    );
 
     // Manually handle newline and echo the input buffer
     if input.trim().eq_ignore_ascii_case("exit") {
@@ -48,12 +51,12 @@ fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
             // Convert line to a string and get the length of it.
             let len = err.line.to_string().len();
 
-            eprint!("\r\n"); 
+            eprint!("\r\n");
             eprint!("{} | {}\r\n", err.line, line);
             eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
 
             state.had_error = true;
-        },
+        }
     }
 
     // TODO: In REPL mode, this should get executed and the had_error flag reset.
@@ -61,7 +64,7 @@ fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
 
 fn exec_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
     parse_line(input, state, stop_flag);
-    
+
     if !state.had_error {
         // TODO: Execute the line here.
     }
@@ -98,8 +101,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .num_args(1),
         )
         .get_matches();
-    
-    let mut state = LoxState { command_count: 0, had_error: false };
+
+    let mut state = LoxState {
+        command_count: 0,
+        had_error: false,
+    };
 
     if let Some(file_path) = matches.get_one::<String>("file") {
         // If a file path is provided, read and process each line from the file
