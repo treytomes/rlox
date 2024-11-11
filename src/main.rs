@@ -83,7 +83,7 @@ fn parse_lines(lines: Vec<String>, state: &mut LoxState) {
 
 fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
     parse_lines(lines, state);
-    if (!state.had_error) {
+    if !state.had_error {
         // TODO: Now execute it.
     }
 }
