@@ -1,4 +1,4 @@
-use super::{LexerError, Literal, Token, TokenType};
+use super::{token, LexerError, Literal, Token, TokenType};
 
 struct Scanner {
     source: String,
@@ -272,12 +272,33 @@ impl Scanner {
             "while" => TokenType::While,
             _ => TokenType::Identifier,
         };
-        self.tokens.push(Token::new(
-            token_type,
-            text,
-            Literal::Identifier(text.to_string()),
-            self.line,
-        ));
+
+        match token_type {
+            TokenType::True => {
+                self.tokens.push(Token::new(
+                    TokenType::True,
+                    "true",
+                    Literal::Boolean(true),
+                    self.line,
+                ));
+            }
+            TokenType::False => {
+                self.tokens.push(Token::new(
+                    TokenType::False,
+                    "false",
+                    Literal::Boolean(false),
+                    self.line,
+                ));
+            }
+            _ => {
+                self.tokens.push(Token::new(
+                    token_type,
+                    text,
+                    Literal::Identifier(text.to_string()),
+                    self.line,
+                ));
+            }
+        }
         Ok(())
     }
 
