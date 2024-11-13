@@ -1,11 +1,13 @@
 mod app_info;
 mod lexer;
+mod parser;
 mod repl;
 
 use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
 use lexer::scan_tokens;
+use parser::{parse, AstPrinter, BinaryOp, Expr, UnaryOp};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -17,7 +19,7 @@ struct LoxState {
     had_error: bool,
 }
 
-fn print_tokens(tokens: Vec<lexer::Token>) {
+fn print_tokens(tokens: &Vec<lexer::Token>) {
     print!("Tokens:\r\n");
     for token in tokens {
         print!("\t{:?}\r\n", token);
@@ -40,7 +42,31 @@ fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
 
     let tokens = scan_tokens(input);
     match tokens {
-        Ok(tokens) => print_tokens(tokens),
+        Ok(tokens) => {
+            print_tokens(&tokens);
+            let expr = parse(&tokens);
+            match expr {
+                Ok(expr) => {
+                    print!("expr: {}\r\n", AstPrinter::new().print(&expr));
+                }
+                Err(err) => {
+                    eprint!("Error: {}\r\n", err);
+
+                    // Take the 3rd line out the input text.
+                    let lines: Vec<&str> = input.split('\n').collect();
+                    let line = lines[err.line - 1];
+
+                    // Convert line to a string and get the length of it.
+                    let len = err.line.to_string().len();
+
+                    eprint!("\r\n");
+                    eprint!("{} | {}\r\n", err.line, line);
+                    eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
+
+                    state.had_error = true;
+                }
+            }
+        }
         Err(err) => {
             eprint!("Error: {}\r\n", err);
 
@@ -89,6 +115,13 @@ fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // let expression = Expr::binary_op(
+    //     Expr::unary_op(UnaryOp::Neg, Expr::number(123.0)),
+    //     BinaryOp::Mul,
+    //     Expr::grouping(Expr::number(45.67)),
+    // );
+    // print!("{}\r\n\r\n", AstPrinter::new().print(&expression));
+
     let app_info = AppInfo::from_env();
 
     let matches = Command::new(app_info.name)

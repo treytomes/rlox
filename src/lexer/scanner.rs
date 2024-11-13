@@ -1,4 +1,4 @@
-use super::{token, LexerError, Literal, Token, TokenType};
+use super::{LexerError, Literal, Token, TokenType};
 
 struct Scanner {
     source: String,
@@ -34,8 +34,13 @@ impl Scanner {
             self.start = self.current;
             self.scan_token()?;
         }
-        self.tokens
-            .push(Token::new(TokenType::EOF, "", Literal::Nil, self.line));
+        self.tokens.push(Token::new(
+            TokenType::EOF,
+            "",
+            Literal::Nil,
+            self.line,
+            self.column,
+        ));
         Ok(())
     }
 
@@ -134,6 +139,7 @@ impl Scanner {
             value,
             Literal::Nil,
             self.line,
+            self.column,
         ));
         Ok(())
     }
@@ -149,6 +155,7 @@ impl Scanner {
             value,
             Literal::Nil,
             self.line,
+            self.column,
         ));
         Ok(())
     }
@@ -162,6 +169,7 @@ impl Scanner {
                 "\r\n",
                 Literal::Nil,
                 self.line,
+                self.column,
             ));
             self.advance();
         } else {
@@ -170,6 +178,7 @@ impl Scanner {
                 "\n",
                 Literal::Nil,
                 self.line,
+                self.column,
             ));
         }
         self.line += 1;
@@ -188,6 +197,7 @@ impl Scanner {
             value,
             Literal::Nil,
             self.line,
+            self.column,
         ));
         Ok(())
     }
@@ -218,6 +228,7 @@ impl Scanner {
             value,
             Literal::String(value.to_string()),
             self.line,
+            self.column,
         ));
         Ok(())
     }
@@ -243,6 +254,7 @@ impl Scanner {
             value,
             Literal::Number(value.parse().unwrap()),
             self.line,
+            self.column,
         ));
         Ok(())
     }
@@ -280,6 +292,7 @@ impl Scanner {
                     "true",
                     Literal::Boolean(true),
                     self.line,
+                    self.column,
                 ));
             }
             TokenType::False => {
@@ -288,6 +301,7 @@ impl Scanner {
                     "false",
                     Literal::Boolean(false),
                     self.line,
+                    self.column,
                 ));
             }
             _ => {
@@ -296,6 +310,7 @@ impl Scanner {
                     text,
                     Literal::Identifier(text.to_string()),
                     self.line,
+                    self.column,
                 ));
             }
         }
@@ -303,8 +318,13 @@ impl Scanner {
     }
 
     fn add_token(&mut self, token_type: TokenType) {
-        self.tokens
-            .push(Token::new(token_type, "", Literal::Nil, self.line))
+        self.tokens.push(Token::new(
+            token_type,
+            "",
+            Literal::Nil,
+            self.line,
+            self.column,
+        ))
     }
 
     fn advance(&mut self) -> char {
