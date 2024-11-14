@@ -127,7 +127,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                     Ok(Object::String(format!("{}{}", left, right)))
                 } else {
                     Err(RuntimeError::new(
-                        "operands must be two numbers or two strings",
+                        "operand mismatch; second operand must be a number if the first one is",
                         loc.get_line(),
                         loc.get_column(),
                     ))
@@ -145,8 +145,24 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                 }
             }
             BinaryOp::Mul => {
-                if let (Object::Number(left), Object::Number(right)) = (left, right) {
+                if let (Object::Number(left), Object::Number(right)) = (left.clone(), right.clone())
+                {
                     Ok(Object::Number(left * right))
+                } else if let (Object::String(left), Object::Number(right)) = (left, right) {
+                    // Raise a runtime error if the right operand is not an integer
+                    if right.fract() != 0.0 {
+                        return Err(RuntimeError::new(
+                            "right operand must be an integer",
+                            loc.get_line(),
+                            loc.get_column(),
+                        ));
+                    }
+
+                    let mut s = String::new();
+                    for _ in 0..right as usize {
+                        s.push_str(&left);
+                    }
+                    Ok(Object::String(s))
                 } else {
                     Err(RuntimeError::new(
                         "operands must be numbers",
