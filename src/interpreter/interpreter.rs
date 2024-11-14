@@ -1,4 +1,7 @@
-use crate::parser::{BinaryOp, Expr, UnaryOp, Visitor};
+use crate::{
+    debug::HasFileLocation,
+    parser::{BinaryOp, Expr, UnaryOp, Visitor},
+};
 
 use super::{Object, RuntimeError};
 
@@ -41,27 +44,48 @@ fn is_not_equal(a: &Object, b: &Object) -> bool {
 }
 
 impl Visitor<Result<Object, RuntimeError>> for Interpreter {
-    fn visit_number(&mut self, n: &f64) -> Result<Object, RuntimeError> {
+    fn visit_number(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        n: &f64,
+    ) -> Result<Object, RuntimeError> {
         Ok(Object::Number(*n))
     }
 
-    fn visit_string(&mut self, s: &String) -> Result<Object, RuntimeError> {
+    fn visit_string(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        s: &String,
+    ) -> Result<Object, RuntimeError> {
         Ok(Object::String(s.clone()))
     }
 
-    fn visit_boolean(&mut self, b: &bool) -> Result<Object, RuntimeError> {
+    fn visit_boolean(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        b: &bool,
+    ) -> Result<Object, RuntimeError> {
         Ok(Object::Boolean(*b))
     }
 
-    fn visit_nil(&mut self) -> Result<Object, RuntimeError> {
+    fn visit_nil(&mut self, _loc: &dyn HasFileLocation) -> Result<Object, RuntimeError> {
         Ok(Object::Nil)
     }
 
-    fn visit_grouping(&mut self, e: &Box<Expr>) -> Result<Object, RuntimeError> {
+    fn visit_grouping(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        e: &Box<Expr>,
+    ) -> Result<Object, RuntimeError> {
         e.accept(self)
     }
 
-    fn visit_unary_op(&mut self, op: &UnaryOp, e: &Box<Expr>) -> Result<Object, RuntimeError> {
+    fn visit_unary_op(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        op: &UnaryOp,
+        e: &Box<Expr>,
+    ) -> Result<Object, RuntimeError> {
         let e = e.accept(self)?;
 
         match op {
@@ -69,7 +93,11 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                 if let Object::Number(n) = e {
                     Ok(Object::Number(-n))
                 } else {
-                    Err(RuntimeError::new("operand must be a number"))
+                    Err(RuntimeError::new(
+                        "operand must be a number",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             UnaryOp::Not => Ok(Object::Boolean(is_falsy(&e))),
@@ -78,6 +106,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
 
     fn visit_binary_op(
         &mut self,
+        loc: &dyn HasFileLocation,
         op: &BinaryOp,
         e1: &Box<Expr>,
         e2: &Box<Expr>,
@@ -95,6 +124,8 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                 } else {
                     Err(RuntimeError::new(
                         "operands must be two numbers or two strings",
+                        loc.get_line(),
+                        loc.get_column(),
                     ))
                 }
             }
@@ -102,21 +133,33 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Number(left - right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             BinaryOp::Mul => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Number(left * right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             BinaryOp::Div => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Number(left / right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             BinaryOp::Eq => Ok(Object::Boolean(is_equal(&left, &right))),
@@ -125,28 +168,44 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Boolean(left < right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             BinaryOp::Le => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Boolean(left <= right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             BinaryOp::Gt => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Boolean(left > right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
             BinaryOp::Ge => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Boolean(left >= right))
                 } else {
-                    Err(RuntimeError::new("operands must be numbers"))
+                    Err(RuntimeError::new(
+                        "operands must be numbers",
+                        loc.get_line(),
+                        loc.get_column(),
+                    ))
                 }
             }
         }

@@ -11,7 +11,7 @@
  *                | "(" expression ")" ;
  */
 use crate::{
-    debug::FileLocation,
+    debug::{FileLocation, HasFileLocation},
     lexer::{Token, TokenType},
 };
 
@@ -31,11 +31,12 @@ fn parse_equality(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let mut expr = parse_comparison(stream)?;
 
     while let Some(token) = stream.peek() {
+        let loc = FileLocation::from_loc(token);
         match token.token_type {
             TokenType::BangEqual | TokenType::EqualEqual => {
                 let operator = BinaryOp::from_token(stream.next().unwrap())?;
                 let right = parse_comparison(stream)?;
-                expr = Expr::binary_op(expr, operator, right);
+                expr = Expr::binary_op(&loc, expr, operator, right);
             }
             _ => break,
         }
@@ -48,6 +49,7 @@ fn parse_comparison(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let mut expr = parse_term(stream)?;
 
     while let Some(token) = stream.peek() {
+        let loc = FileLocation::from_loc(token);
         match token.token_type {
             TokenType::Greater
             | TokenType::GreaterEqual
@@ -55,7 +57,7 @@ fn parse_comparison(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             | TokenType::LessEqual => {
                 let operator = BinaryOp::from_token(stream.next().unwrap())?;
                 let right = parse_term(stream)?;
-                expr = Expr::binary_op(expr, operator, right);
+                expr = Expr::binary_op(&loc, expr, operator, right);
             }
             _ => break,
         }
@@ -68,11 +70,12 @@ fn parse_term(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let mut expr = parse_factor(stream)?;
 
     while let Some(token) = stream.peek() {
+        let loc = FileLocation::from_loc(token);
         match token.token_type {
             TokenType::Minus | TokenType::Plus => {
                 let operator = BinaryOp::from_token(stream.next().unwrap())?;
                 let right = parse_factor(stream)?;
-                expr = Expr::binary_op(expr, operator, right);
+                expr = Expr::binary_op(&loc, expr, operator, right);
             }
             _ => break,
         }
@@ -85,11 +88,12 @@ fn parse_factor(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let mut expr = parse_unary(stream)?;
 
     while let Some(token) = stream.peek() {
+        let loc = FileLocation::from_loc(token);
         match token.token_type {
             TokenType::Slash | TokenType::Star => {
                 let operator = BinaryOp::from_token(stream.next().unwrap())?;
                 let right = parse_unary(stream)?;
-                expr = Expr::binary_op(expr, operator, right);
+                expr = Expr::binary_op(&loc, expr, operator, right);
             }
             _ => break,
         }
@@ -100,11 +104,12 @@ fn parse_factor(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
 fn parse_unary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     if let Some(token) = stream.peek() {
+        let loc = FileLocation::from_loc(token);
         match token.token_type {
             TokenType::Bang | TokenType::Minus => {
                 let operator = UnaryOp::from_token(stream.next().unwrap())?;
                 let right = parse_unary(stream)?;
-                return Ok(Expr::unary_op(operator, right));
+                return Ok(Expr::unary_op(&loc, operator, right));
             }
             _ => {}
         }
@@ -115,6 +120,7 @@ fn parse_unary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
 fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     if let Some(token) = stream.next() {
+        let loc = FileLocation::from_loc(token);
         let line = token.get_line();
         let column = token.get_column();
 
@@ -123,11 +129,11 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             | TokenType::True
             | TokenType::Nil
             | TokenType::Number
-            | TokenType::String => Ok(Expr::literal(token.literal.clone())),
+            | TokenType::String => Ok(Expr::literal(&loc, token.literal.clone())),
             TokenType::LeftParen => {
                 let expr = parse_expr(stream)?;
                 consume(TokenType::RightParen, stream)?;
-                Ok(Expr::grouping(expr))
+                Ok(Expr::grouping(&loc, expr))
             }
             _ => Err(ParserError::new("expected expression", line, column)),
         }

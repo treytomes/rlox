@@ -3,7 +3,7 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use crate::debug::FileLocation;
+use crate::debug::HasFileLocation;
 
 pub struct LexerError {
     pub msg: String,
@@ -23,7 +23,7 @@ impl LexerError {
 
 impl Error for LexerError {}
 
-impl FileLocation for LexerError {
+impl HasFileLocation for LexerError {
     fn get_line(&self) -> usize {
         self.line
     }

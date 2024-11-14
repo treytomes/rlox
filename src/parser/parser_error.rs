@@ -3,7 +3,7 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use crate::{debug::FileLocation, lexer::Token};
+use crate::{debug::HasFileLocation, lexer::Token};
 
 pub struct ParserError {
     pub msg: String,
@@ -37,7 +37,7 @@ impl ParserError {
     }
 }
 
-impl FileLocation for ParserError {
+impl HasFileLocation for ParserError {
     fn get_line(&self) -> usize {
         self.line
     }

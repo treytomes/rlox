@@ -1,4 +1,4 @@
-use crate::debug::FileLocation;
+use crate::debug::HasFileLocation;
 
 use super::{Literal, TokenType};
 use std::fmt::Display;
@@ -30,7 +30,7 @@ impl Token {
     }
 }
 
-impl FileLocation for Token {
+impl HasFileLocation for Token {
     fn get_line(&self) -> usize {
         self.line
     }

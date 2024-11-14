@@ -8,7 +8,7 @@ mod repl;
 use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
-use debug::FileLocation;
+use debug::HasFileLocation;
 use interpreter::{Interpreter, Object};
 use lexer::scan_tokens;
 use parser::{parse, AstPrinter, Expr};
@@ -22,9 +22,15 @@ use std::sync::Arc;
 // \-- Only return the result of the right-most expression to the user for that sequence.
 //      \-- Unless this is a function argument list.
 // TODO: Implement bitwise and/or operators.
-// \-- Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, flatten to integer and use bitwise ops.
+// \-- Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, error if not integer and use bitwise ops.
 // TODO: Implement the ternary operator.
 // \-- I expect this will be above the precedence of equality.
+
+// TODO: Division by 0 should be Literal::NaN.
+// TODO: "scone" + 4 == "scone4"
+// TODO: "a" * 4 = "aaaa"
+// \-- This should error out if not an integer.
+// TODO: "ab" + cd" = "abcd"
 
 // TODO: How to provide the line/column for runtime errors?
 
@@ -47,7 +53,7 @@ fn print_tokens(tokens: &Vec<lexer::Token>) {
 
 fn print_error_location<E>(input: &str, err: &E)
 where
-    E: FileLocation + Error,
+    E: HasFileLocation + Error,
 {
     eprint!("\r\nerror: {}\r\n", err);
 
@@ -121,7 +127,7 @@ fn exec_line(input: &str, state: &mut LoxState, _stop_flag: &repl::StopFlag) {
                         print!("\r\n{}\r\n", value);
                     }
                     Err(err) => {
-                        eprint!("\r\nruntime error: {}\r\n", err);
+                        print_error_location(input, &err);
                     }
                 }
             }
@@ -136,7 +142,7 @@ fn exec_line(input: &str, state: &mut LoxState, _stop_flag: &repl::StopFlag) {
     state.had_error = false;
 }
 
-fn parse_lines(lines: Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, anyhow::Error> {
+fn parse_lines(lines: &Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, anyhow::Error> {
     let mut exprs: Vec<Expr> = vec![];
     for line in lines {
         if line.trim().is_empty() {
@@ -147,7 +153,8 @@ fn parse_lines(lines: Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, an
     Ok(exprs)
 }
 
-fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
+// TODO: This one won't function correctly until line separators are implemented.
+fn exec_lines(lines: &Vec<String>, state: &mut LoxState) {
     let stop_flag = Arc::new(AtomicBool::new(false));
     match parse_lines(lines, state) {
         Ok(exprs) => {
@@ -163,7 +170,7 @@ fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
                         }
                         Err(err) => {
                             state.had_error = true;
-                            eprint!("\r\nruntime error: {}\r\n", err);
+                            print_error_location(lines[err.get_line() - 1].as_str(), &err);
                             break;
                         }
                     }
@@ -214,7 +221,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let file = File::open(file_path)?;
         let reader = BufReader::new(file);
         let lines: Vec<String> = reader.lines().collect::<Result<_, _>>()?;
-        exec_lines(lines, &mut state);
+        exec_lines(&lines, &mut state);
     } else if atty::is(Stream::Stdin) {
         // If stdin is a terminal and no file is provided, start the REPL
         repl::start(&mut exec_line, &mut state)?;
@@ -222,7 +229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // If input is piped in, read lines from stdin
         let stdin = io::stdin();
         let lines: Vec<String> = stdin.lock().lines().collect::<Result<_, _>>()?;
-        exec_lines(lines, &mut state);
+        exec_lines(&lines, &mut state);
     }
 
     Ok(())
