@@ -5,6 +5,7 @@ pub enum Object {
     String(String),
     Number(f64),
     Boolean(bool),
+    NaN,
     Nil,
 }
 
@@ -14,6 +15,7 @@ impl Display for Object {
             Object::String(s) => write!(f, "{}", s),
             Object::Number(n) => write!(f, "{}", n),
             Object::Boolean(b) => write!(f, "{}", b),
+            Object::NaN => write!(f, "NaN"),
             Object::Nil => write!(f, "nil"),
         }
     }

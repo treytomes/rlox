@@ -3,10 +3,11 @@
 A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftinginterpreters.com/) implemented in Rust.
 
 ## Deviations
-**Things I implemented that don't necessarily fit the vanilla language spec.**
+*Things I implemented that don't necessarily fit the vanilla language spec.*
 
 - Error reports will show the line that produced the error with an indicator for which character caused the problem.
     - I'm expecting this to give me trouble when I get to using a VM to execute the code.
+- Dividing by 0 yields the `NaN` literal, which is definitely not a number.
 
 ## TODO
 
@@ -18,10 +19,18 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Implement the ternary operator.
     - I expect this will be above the precedence of equality.
 
-- Division by 0 should be Literal::NaN.
 - "scone" + 4 == "scone4"
 - "a" * 4 = "aaaa"
     - This should error out if not an integer.
 - "ab" + cd" = "abcd"
 
+## Musings
+
 - I really like the idea of function expressions.
+    - `var my_func = fn(a, b, c, d) print a, b, c, d`
+    - `var my_func = (a, b, c, d) => print a, b, c, d`
+    - `my_func = (a, b, c, d) => { print a; print b; return c; }`
+    - `my_func = (a, b) => a + b`
+    - There's a lot of ways to do this.
+- I might use `let` instead of `var`.  `var` carries some bad JS vibes.
+- I think everything should be an "expression" of some sort.

@@ -153,7 +153,11 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
             }
             BinaryOp::Div => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
-                    Ok(Object::Number(left / right))
+                    if (right == 0.0) {
+                        Ok(Object::NaN)
+                    } else {
+                        Ok(Object::Number(left / right))
+                    }
                 } else {
                     Err(RuntimeError::new(
                         "operands must be numbers",
