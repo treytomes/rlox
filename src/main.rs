@@ -1,4 +1,5 @@
 mod app_info;
+mod interpreter;
 mod lexer;
 mod parser;
 mod repl;
@@ -6,8 +7,9 @@ mod repl;
 use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
+use interpreter::{Interpreter, Object};
 use lexer::scan_tokens;
-use parser::{parse, AstPrinter};
+use parser::{parse, AstPrinter, Expr};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -17,9 +19,13 @@ use std::sync::Arc;
 // \-- Only return the result of the right-most expression to the user for that sequence.
 //      \-- Unless this is a function argument list.
 // TODO: Implement bitwise and/or operators.
-// \-- Replace && / || with and/or.  Use boolean operations with true/false.  With numbers, flatten to integer and use bitwise ops.
+// \-- Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, flatten to integer and use bitwise ops.
 // TODO: Implement the ternary operator.
 // \-- I expect this will be above the precedence of equality.
+
+const REPORT_COUNT: bool = false;
+const REPORT_TOKENS: bool = false;
+const REPORT_AST: bool = false;
 
 // Define a struct to represent the REPL state
 struct LoxState {
@@ -34,31 +40,31 @@ fn print_tokens(tokens: &Vec<lexer::Token>) {
     }
 }
 
-fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
+fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> {
     state.command_count += 1;
-    print!(
-        "\r\nCallback: You entered '{}', command count: {}\r\n",
-        input, state.command_count
-    );
-
-    // Manually handle newline and echo the input buffer
-    if input.trim().eq_ignore_ascii_case("exit") {
-        // Set stop_flag to true if "exit" is entered.
-        stop_flag.store(true, Ordering::Relaxed);
-        return;
+    if REPORT_COUNT {
+        print!(
+            "\r\ncallback: you entered '{}', command count: {}\r\n",
+            input, state.command_count
+        );
     }
 
     let tokens = scan_tokens(input);
     match tokens {
         Ok(tokens) => {
-            print_tokens(&tokens);
+            if REPORT_TOKENS {
+                print_tokens(&tokens);
+            }
             let expr = parse(&tokens);
             match expr {
                 Ok(expr) => {
-                    print!("expr: {}\r\n", AstPrinter::new().print(&expr));
+                    if REPORT_AST {
+                        print!("\r\nexpr: {}\r\n", AstPrinter::new().print(&expr));
+                    }
+                    return Ok(expr);
                 }
                 Err(err) => {
-                    eprint!("Error: {}\r\n", err);
+                    eprint!("\r\nerror: {}\r\n", err);
 
                     // Take the 3rd line out the input text.
                     let lines: Vec<&str> = input.split('\n').collect();
@@ -72,6 +78,7 @@ fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
                     eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
 
                     state.had_error = true;
+                    return Err(anyhow::Error::new(err).context("parsing error"));
                 }
             }
         }
@@ -90,35 +97,86 @@ fn parse_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
             eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
 
             state.had_error = true;
+            return Err(anyhow::Error::new(err).context("lexing error"));
         }
     }
 
     // TODO: In REPL mode, this should get executed and the had_error flag reset.
 }
 
-fn exec_line(input: &str, state: &mut LoxState, stop_flag: &repl::StopFlag) {
-    parse_line(input, state, stop_flag);
-
-    if !state.had_error {
-        // TODO: Execute the line here.
+fn exec_line(input: &str, state: &mut LoxState, _stop_flag: &repl::StopFlag) {
+    // TODO: Maybe move the stop flag into the state?
+    let expr = parse_line(input, state);
+    match expr {
+        Ok(expr) => {
+            if !state.had_error {
+                // TODO: had_error will always be flipped if the result is an error?
+                let result = Interpreter::new().eval(&expr);
+                match result {
+                    Ok(value) => {
+                        // print!("result: {}\r\n", value);
+                        print!("{}\r\n", value);
+                    }
+                    Err(err) => {
+                        eprint!("runtime error: {}\r\n", err);
+                    }
+                }
+            }
+        }
+        Err(_err) => {
+            // The lexing/parsing errors were reported in the previous stages.
+            // eprint!("error: {}\r\n", err);
+            return;
+        }
     }
+
     state.had_error = false;
 }
 
-fn parse_lines(lines: Vec<String>, state: &mut LoxState) {
-    let stop_flag = Arc::new(AtomicBool::new(false));
+fn parse_lines(lines: Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, anyhow::Error> {
+    let mut exprs: Vec<Expr> = vec![];
     for line in lines {
-        parse_line(&line, state, &stop_flag);
-        if stop_flag.load(Ordering::Relaxed) {
-            break;
+        if line.trim().is_empty() {
+            continue;
         }
+        exprs.push(parse_line(&line, state)?);
     }
+    Ok(exprs)
 }
 
 fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
-    parse_lines(lines, state);
-    if !state.had_error {
-        // TODO: Now execute it.
+    let stop_flag = Arc::new(AtomicBool::new(false));
+    match parse_lines(lines, state) {
+        Ok(exprs) => {
+            if !state.had_error {
+                let mut interpreter = Interpreter::new();
+
+                let mut final_result = Object::Nil;
+                for expr in exprs {
+                    let result = interpreter.eval(&expr);
+                    match result {
+                        Ok(value) => {
+                            final_result = value;
+                        }
+                        Err(err) => {
+                            state.had_error = true;
+                            eprint!("runtime error: {}\r\n", err);
+                            break;
+                        }
+                    }
+                    if stop_flag.load(Ordering::Relaxed) {
+                        break;
+                    }
+                }
+                if !state.had_error {
+                    // print!("result: {}\r\n", final_result);
+                    print!("{}\r\n", final_result);
+                }
+            }
+        }
+        Err(err) => {
+            eprint!("error: {}\r\n", err);
+        }
     }
 }
 

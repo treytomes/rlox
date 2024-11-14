@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display};
+use std::{
+    error::Error,
+    fmt::{Debug, Display},
+};
 
 pub struct LexerError {
     pub msg: String,
@@ -15,6 +18,8 @@ impl LexerError {
         }
     }
 }
+
+impl Error for LexerError {}
 
 impl Display for LexerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

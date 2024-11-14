@@ -6,6 +6,7 @@ authors = ["Trey Tomes <trey.tomes@gmail.com>"]
 description = "An implementation of the Lox language in Rust."
 
 [dependencies]
+anyhow = "1.0.93"
 atty = "0.2.14"
 clap = { version = "4.5.20", features = ["derive"] }
 signal-hook = "0.3.17"

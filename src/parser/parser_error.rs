@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display};
+use std::{
+    error::Error,
+    fmt::{Debug, Display},
+};
 
 use crate::lexer::Token;
 
@@ -33,6 +36,8 @@ impl ParserError {
         }
     }
 }
+
+impl Error for ParserError {}
 
 impl Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
