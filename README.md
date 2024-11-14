@@ -8,6 +8,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Error reports will show the line that produced the error with an indicator for which character caused the problem.
     - I'm expecting this to give me trouble when I get to using a VM to execute the code.
 - Dividing by 0 yields the `NaN` literal, which is definitely not a number.
+- Adding strings together concatenates the strings.
 
 ## TODO
 
@@ -22,7 +23,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - "scone" + 4 == "scone4"
 - "a" * 4 = "aaaa"
     - This should error out if not an integer.
-- "ab" + cd" = "abcd"
+- "ab" + "cd" = "abcd"
 
 ## Musings
 
