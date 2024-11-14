@@ -9,6 +9,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - I'm expecting this to give me trouble when I get to using a VM to execute the code.
 - Dividing by 0 yields the `NaN` literal, which is definitely not a number.
 - Adding strings together concatenates the strings.
+- Adding a number to a string converts the number to a string before concatenating.
 
 ## TODO
 
@@ -20,10 +21,8 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Implement the ternary operator.
     - I expect this will be above the precedence of equality.
 
-- "scone" + 4 == "scone4"
 - "a" * 4 = "aaaa"
     - This should error out if not an integer.
-- "ab" + "cd" = "abcd"
 
 ## Musings
 

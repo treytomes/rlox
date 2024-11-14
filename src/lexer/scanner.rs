@@ -243,7 +243,7 @@ impl Scanner {
             // Consume the "."
             self.advance();
 
-            while self.is_digit(self.peek_next()) {
+            while self.is_digit(self.peek()) {
                 self.advance();
             }
         }
