@@ -7,11 +7,19 @@ use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
 use lexer::scan_tokens;
-use parser::{parse, AstPrinter, BinaryOp, Expr, UnaryOp};
+use parser::{parse, AstPrinter};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
+// TODO: Implement comma-separated expression parsing.
+// \-- Only return the result of the right-most expression to the user for that sequence.
+//      \-- Unless this is a function argument list.
+// TODO: Implement bitwise and/or operators.
+// \-- Replace && / || with and/or.  Use boolean operations with true/false.  With numbers, flatten to integer and use bitwise ops.
+// TODO: Implement the ternary operator.
+// \-- I expect this will be above the precedence of equality.
 
 // Define a struct to represent the REPL state
 struct LoxState {
