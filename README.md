@@ -10,6 +10,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Dividing by 0 yields the `NaN` literal, which is definitely not a number.
 - Adding strings together concatenates the strings.
 - Adding a number to a string converts the number to a string before concatenating.
+- Multiplying a string by an integer will concatenate the string with itself a number of times.
 
 ## TODO
 
@@ -20,9 +21,6 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, error if not integer and use bitwise ops.
 - Implement the ternary operator.
     - I expect this will be above the precedence of equality.
-
-- "a" * 4 = "aaaa"
-    - This should error out if not an integer.
 
 ## Musings
 
