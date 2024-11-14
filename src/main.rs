@@ -1,4 +1,5 @@
 mod app_info;
+mod debug;
 mod interpreter;
 mod lexer;
 mod parser;
@@ -7,9 +8,11 @@ mod repl;
 use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
+use debug::FileLocation;
 use interpreter::{Interpreter, Object};
 use lexer::scan_tokens;
 use parser::{parse, AstPrinter, Expr};
+use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -22,6 +25,8 @@ use std::sync::Arc;
 // \-- Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, flatten to integer and use bitwise ops.
 // TODO: Implement the ternary operator.
 // \-- I expect this will be above the precedence of equality.
+
+// TODO: How to provide the line/column for runtime errors?
 
 const REPORT_COUNT: bool = false;
 const REPORT_TOKENS: bool = false;
@@ -38,6 +43,28 @@ fn print_tokens(tokens: &Vec<lexer::Token>) {
     for token in tokens {
         print!("\t{:?}\r\n", token);
     }
+}
+
+fn print_error_location<E>(input: &str, err: &E)
+where
+    E: FileLocation + Error,
+{
+    eprint!("\r\nerror: {}\r\n", err);
+
+    // Take the 3rd line out the input text.
+    let lines: Vec<&str> = input.split('\n').collect();
+    let line = lines[err.get_line() - 1];
+
+    // Convert line to a string and get the length of it.
+    let len = err.get_line().to_string().len();
+
+    eprint!("\r\n");
+    eprint!("{} | {}\r\n", err.get_line(), line);
+    eprint!(
+        "{:>width$}-- Here.\r\n",
+        "^",
+        width = err.get_column() + len + 3
+    );
 }
 
 fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> {
@@ -64,38 +91,14 @@ fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> 
                     return Ok(expr);
                 }
                 Err(err) => {
-                    eprint!("\r\nerror: {}\r\n", err);
-
-                    // Take the 3rd line out the input text.
-                    let lines: Vec<&str> = input.split('\n').collect();
-                    let line = lines[err.line - 1];
-
-                    // Convert line to a string and get the length of it.
-                    let len = err.line.to_string().len();
-
-                    eprint!("\r\n");
-                    eprint!("{} | {}\r\n", err.line, line);
-                    eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
-
+                    print_error_location(input, &err);
                     state.had_error = true;
                     return Err(anyhow::Error::new(err).context("parsing error"));
                 }
             }
         }
         Err(err) => {
-            eprint!("Error: {}\r\n", err);
-
-            // Take the 3rd line out the input text.
-            let lines: Vec<&str> = input.split('\n').collect();
-            let line = lines[err.line - 1];
-
-            // Convert line to a string and get the length of it.
-            let len = err.line.to_string().len();
-
-            eprint!("\r\n");
-            eprint!("{} | {}\r\n", err.line, line);
-            eprint!("{:>width$}-- Here.\r\n", "^", width = err.column + len + 3);
-
+            print_error_location(input, &err);
             state.had_error = true;
             return Err(anyhow::Error::new(err).context("lexing error"));
         }
@@ -115,10 +118,10 @@ fn exec_line(input: &str, state: &mut LoxState, _stop_flag: &repl::StopFlag) {
                 match result {
                     Ok(value) => {
                         // print!("result: {}\r\n", value);
-                        print!("{}\r\n", value);
+                        print!("\r\n{}\r\n", value);
                     }
                     Err(err) => {
-                        eprint!("runtime error: {}\r\n", err);
+                        eprint!("\r\nruntime error: {}\r\n", err);
                     }
                 }
             }
@@ -160,7 +163,7 @@ fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
                         }
                         Err(err) => {
                             state.had_error = true;
-                            eprint!("runtime error: {}\r\n", err);
+                            eprint!("\r\nruntime error: {}\r\n", err);
                             break;
                         }
                     }
@@ -170,12 +173,12 @@ fn exec_lines(lines: Vec<String>, state: &mut LoxState) {
                 }
                 if !state.had_error {
                     // print!("result: {}\r\n", final_result);
-                    print!("{}\r\n", final_result);
+                    print!("\r\n{}\r\n", final_result);
                 }
             }
         }
         Err(err) => {
-            eprint!("error: {}\r\n", err);
+            eprint!("\r\nerror: {}\r\n", err);
         }
     }
 }

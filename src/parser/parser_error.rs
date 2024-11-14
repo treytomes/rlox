@@ -3,12 +3,12 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use crate::lexer::Token;
+use crate::{debug::FileLocation, lexer::Token};
 
 pub struct ParserError {
     pub msg: String,
-    pub line: usize,
-    pub column: usize,
+    line: usize,
+    column: usize,
 }
 
 impl ParserError {
@@ -23,8 +23,8 @@ impl ParserError {
     pub fn unexpected_token(token: &Token) -> Self {
         Self {
             msg: format!("unexpected token: {}", token.token_type),
-            line: token.line,
-            column: token.column,
+            line: token.get_line(),
+            column: token.get_column(),
         }
     }
 
@@ -34,6 +34,16 @@ impl ParserError {
             line: 0,
             column: 0,
         }
+    }
+}
+
+impl FileLocation for ParserError {
+    fn get_line(&self) -> usize {
+        self.line
+    }
+
+    fn get_column(&self) -> usize {
+        self.column
     }
 }
 

@@ -3,10 +3,12 @@ use std::{
     fmt::{Debug, Display},
 };
 
+use crate::debug::FileLocation;
+
 pub struct LexerError {
     pub msg: String,
-    pub line: usize,
-    pub column: usize,
+    line: usize,
+    column: usize,
 }
 
 impl LexerError {
@@ -20,6 +22,16 @@ impl LexerError {
 }
 
 impl Error for LexerError {}
+
+impl FileLocation for LexerError {
+    fn get_line(&self) -> usize {
+        self.line
+    }
+
+    fn get_column(&self) -> usize {
+        self.column
+    }
+}
 
 impl Display for LexerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

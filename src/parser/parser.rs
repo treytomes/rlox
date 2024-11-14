@@ -10,64 +10,12 @@
  * primary        → NUMBER | STRING | "true" | "false" | "nil"
  *                | "(" expression ")" ;
  */
-use crate::lexer::{Token, TokenType};
+use crate::{
+    debug::FileLocation,
+    lexer::{Token, TokenType},
+};
 
-use super::{BinaryOp, Expr, ParserError, UnaryOp};
-
-struct TokenStream {
-    tokens: Vec<Token>,
-    index: usize,
-}
-
-impl TokenStream {
-    fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, index: 0 }
-    }
-
-    fn peek(&mut self) -> Option<&Token> {
-        self.skip_space();
-        self.tokens.get(self.index)
-    }
-
-    fn current(&self) -> Option<&Token> {
-        self.tokens.get(self.index)
-    }
-
-    fn next(&mut self) -> Option<&Token> {
-        if self.is_at_end() {
-            return None;
-        }
-        self.skip_space();
-        let token = self.tokens.get(self.index);
-        self.index += 1;
-        token
-    }
-
-    fn is_at_end(&self) -> bool {
-        self.index >= self.tokens.len()
-    }
-
-    /**
-     * Skip any tokens that don't provide value to the output expression.
-     */
-    fn skip_space(&mut self) {
-        self.skip_tokens(vec![
-            TokenType::Whitespace,
-            TokenType::NewLine,
-            TokenType::Comment,
-        ]);
-    }
-
-    fn skip_tokens(&mut self, token_types: Vec<TokenType>) {
-        while let Some(token) = self.tokens.get(self.index) {
-            if token_types.contains(&token.token_type) {
-                self.index += 1
-            } else {
-                break;
-            }
-        }
-    }
-}
+use super::{BinaryOp, Expr, ParserError, TokenStream, UnaryOp};
 
 pub fn parse(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
     let mut stream = TokenStream::new(tokens.clone());
@@ -167,8 +115,8 @@ fn parse_unary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
 fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     if let Some(token) = stream.next() {
-        let line = token.line;
-        let column = token.column;
+        let line = token.get_line();
+        let column = token.get_column();
 
         match token.token_type {
             TokenType::False
@@ -187,8 +135,8 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
         if let Some(token) = stream.current() {
             Err(ParserError::new(
                 "expected expression",
-                token.line,
-                token.column,
+                token.get_line(),
+                token.get_column(),
             ))
         } else {
             Err(ParserError::new("expected expression", 0, 0))
@@ -203,8 +151,8 @@ fn consume(token_type: TokenType, stream: &mut TokenStream) -> Result<Token, Par
         }
         return Err(ParserError::new(
             format!("expected '{:?}'", token_type).as_str(),
-            token.line,
-            token.column,
+            token.get_line(),
+            token.get_column(),
         ));
     }
     Err(ParserError::new(

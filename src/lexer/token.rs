@@ -1,3 +1,5 @@
+use crate::debug::FileLocation;
+
 use super::{Literal, TokenType};
 use std::fmt::Display;
 
@@ -5,8 +7,8 @@ use std::fmt::Display;
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
-    pub line: usize,
-    pub column: usize,
+    line: usize,
+    column: usize,
     pub literal: Literal,
 }
 
@@ -25,6 +27,16 @@ impl Token {
             line,
             column,
         }
+    }
+}
+
+impl FileLocation for Token {
+    fn get_line(&self) -> usize {
+        self.line
+    }
+
+    fn get_column(&self) -> usize {
+        self.column
     }
 }
 
