@@ -29,6 +29,9 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - `var my_func = (a, b, c, d) => print a, b, c, d`
     - `my_func = (a, b, c, d) => { print a; print b; return c; }`
     - `my_func = (a, b) => a + b`
+    - `let my_func(a, b) => a + b`
+    - `let my_func(a, b) a + b`
+    - `let my_func(a, b) { return a + b }`
     - There's a lot of ways to do this.
 - I might use `let` instead of `var`.  `var` carries some bad JS vibes.
 - I think everything should be an "expression" of some sort.
