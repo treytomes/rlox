@@ -18,22 +18,6 @@ use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-// TODO: Implement comma-separated expression parsing.
-// \-- Only return the result of the right-most expression to the user for that sequence.
-//      \-- Unless this is a function argument list.
-// TODO: Implement bitwise and/or operators.
-// \-- Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, error if not integer and use bitwise ops.
-// TODO: Implement the ternary operator.
-// \-- I expect this will be above the precedence of equality.
-
-// TODO: Division by 0 should be Literal::NaN.
-// TODO: "scone" + 4 == "scone4"
-// TODO: "a" * 4 = "aaaa"
-// \-- This should error out if not an integer.
-// TODO: "ab" + cd" = "abcd"
-
-// TODO: How to provide the line/column for runtime errors?
-
 const REPORT_COUNT: bool = false;
 const REPORT_TOKENS: bool = false;
 const REPORT_AST: bool = false;
