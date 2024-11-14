@@ -119,7 +119,11 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                 if let (Object::Number(left), Object::Number(right)) = (left.clone(), right.clone())
                 {
                     Ok(Object::Number(left + right))
-                } else if let (Object::String(left), Object::String(right)) = (left, right) {
+                } else if let (Object::String(left), Object::String(right)) =
+                    (left.clone(), right.clone())
+                {
+                    Ok(Object::String(format!("{}{}", left, right)))
+                } else if let (Object::String(left), Object::Number(right)) = (left, right) {
                     Ok(Object::String(format!("{}{}", left, right)))
                 } else {
                     Err(RuntimeError::new(
