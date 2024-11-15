@@ -202,7 +202,6 @@ impl Scanner {
         Ok(())
     }
 
-    // TODO: How to escape strings?
     fn string(&mut self) -> Result<(), LexerError> {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {

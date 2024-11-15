@@ -20,6 +20,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 
 ## TODO
 
+- Implement escape sequences in strings.
 - Implement comma-separated expression parsing.
     - Only return the result of the right-most expression to the user for that sequence.
         - Unless this is a function argument list.
