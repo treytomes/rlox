@@ -5,24 +5,24 @@ use std::sync::Arc;
 use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 
-pub type StopFlag = Arc<AtomicBool>;
+use crate::interpreter::HasStopFlag;
 
 const PROMPT: &str = "\r\n> ";
 
 fn handle_enter<TCallback, TState>(
     input_buffer: &mut String,
     cursor_position: &mut usize,
-    stop_flag: &StopFlag,
     callback: &mut TCallback,
     state: &mut TState,
 ) where
-    TCallback: FnMut(&str, &mut TState, &StopFlag),
+    TCallback: FnMut(&str, &mut TState),
+    TState: HasStopFlag,
 {
-    callback(&input_buffer, state, stop_flag);
+    callback(&input_buffer, state);
     input_buffer.clear();
     *cursor_position = 0;
 
-    if !stop_flag.load(Ordering::Relaxed) {
+    if !state.is_stopped() {
         print!("{}", PROMPT);
     }
 }
@@ -92,11 +92,11 @@ fn process_key_event<TCallback, TState>(
     key_event: KeyEvent,
     input_buffer: &mut String,
     cursor_position: &mut usize,
-    stop_flag: &StopFlag,
     callback: &mut TCallback,
     state: &mut TState,
 ) where
-    TCallback: FnMut(&str, &mut TState, &StopFlag),
+    TCallback: FnMut(&str, &mut TState),
+    TState: HasStopFlag,
 {
     if key_event.kind != crossterm::event::KeyEventKind::Press {
         return;
@@ -108,7 +108,7 @@ fn process_key_event<TCallback, TState>(
             modifiers: _,
             kind: _,
             state: _,
-        } => handle_enter(input_buffer, cursor_position, stop_flag, callback, state),
+        } => handle_enter(input_buffer, cursor_position, callback, state),
 
         KeyEvent {
             code: KeyCode::Backspace,
@@ -143,7 +143,7 @@ fn process_key_event<TCallback, TState>(
             modifiers: KeyModifiers::CONTROL,
             kind: _,
             state: _,
-        } if c == 'c' || c == 'd' || c == 'z' => stop_flag.store(true, Ordering::Relaxed),
+        } if c == 'c' || c == 'd' || c == 'z' => state.trigger_stop(),
 
         KeyEvent {
             code: KeyCode::Char(c),
@@ -161,11 +161,10 @@ pub fn start<TCallback, TState>(
     state: &mut TState,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    TCallback: FnMut(&str, &mut TState, &StopFlag),
+    TCallback: FnMut(&str, &mut TState),
+    TState: HasStopFlag,
 {
     print!("Welcome to your REPL! Type 'Ctrl+Z' to quit.\r\n");
-
-    let stop_flag = Arc::new(AtomicBool::new(false));
 
     // Enable raw mode for the terminal
     // let stdin = io::stdin();
@@ -186,37 +185,16 @@ where
                 key_event,
                 &mut input_buffer,
                 &mut cursor_position,
-                &stop_flag,
                 callback,
                 state,
             );
             stdout.flush()?;
 
-            if stop_flag.load(Ordering::Relaxed) {
+            if state.is_stopped() {
                 break;
             }
         }
     }
-
-    // for c in stdin.keys() {
-    //     match c {
-    //         Ok(key) => process_key_event(
-    //             key,
-    //             &mut input_buffer,
-    //             &mut cursor_position,
-    //             &stop_flag,
-    //             callback,
-    //             state,
-    //         ),
-    //         Err(e) => eprintln!("Error reading input: {:?}", e),
-    //     }
-    //     stdout.flush()?;
-
-    //     // Check for Ctrl+Z signal flag and handle it.
-    //     if stop_flag.load(Ordering::Relaxed) {
-    //         break;
-    //     }
-    // }
 
     stdout.flush()?;
     print!("\r\nGoodbye!\r\n");

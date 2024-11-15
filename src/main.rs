@@ -9,7 +9,7 @@ use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
 use debug::HasFileLocation;
-use interpreter::{Interpreter, Object};
+use interpreter::{HasStopFlag, Interpreter, Object};
 use lexer::scan_tokens;
 use parser::{parse, AstPrinter, Expr};
 use std::error::Error;
@@ -26,6 +26,17 @@ const REPORT_AST: bool = false;
 struct LoxState {
     command_count: usize,
     had_error: bool,
+    stop_flag: Arc<AtomicBool>,
+}
+
+impl HasStopFlag for LoxState {
+    fn trigger_stop(&mut self) {
+        self.stop_flag.store(true, Ordering::Relaxed);
+    }
+
+    fn is_stopped(&self) -> bool {
+        self.stop_flag.load(Ordering::Relaxed)
+    }
 }
 
 fn print_tokens(tokens: &Vec<lexer::Token>) {
@@ -93,16 +104,13 @@ fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> 
             return Err(anyhow::Error::new(err).context("lexing error"));
         }
     }
-
-    // TODO: In REPL mode, this should get executed and the had_error flag reset.
 }
 
-fn exec_line(input: &str, state: &mut LoxState, _stop_flag: &repl::StopFlag) {
+fn exec_line(input: &str, state: &mut LoxState) {
     if input.trim().is_empty() {
         return;
     }
 
-    // TODO: Maybe move the stop flag into the state?
     let expr = parse_line(input, state);
     match expr {
         Ok(expr) => {
@@ -202,6 +210,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut state = LoxState {
         command_count: 0,
         had_error: false,
+        stop_flag: Arc::new(AtomicBool::new(false)),
     };
 
     if let Some(file_path) = matches.get_one::<String>("file") {
