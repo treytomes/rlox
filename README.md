@@ -11,6 +11,12 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Adding strings together concatenates the strings.
 - Adding a number to a string converts the number to a string before concatenating.
 - Multiplying a string by an integer will concatenate the string with itself a number of times.
+- Truthiness:
+    - NaN is not truthy.
+    - Empty strings are not truthy.
+    - Any number != 0 is truthy.
+- Equalness:
+    - NaN is not equal to anything.
 
 ## TODO
 
@@ -21,6 +27,8 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, error if not integer and use bitwise ops.
 - Implement the ternary operator.
     - I expect this will be above the precedence of equality.
+    - If the if-statement is an if-expression, is this really necessary?
+    - I do like a bit of syntactic sugar.
 
 ## Musings
 

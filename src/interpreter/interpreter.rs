@@ -17,32 +17,6 @@ impl Interpreter {
     }
 }
 
-fn is_truthy(object: &Object) -> bool {
-    match object {
-        Object::Nil => false,
-        Object::Boolean(b) => *b,
-        _ => true,
-    }
-}
-
-fn is_falsy(object: &Object) -> bool {
-    !is_truthy(object)
-}
-
-fn is_equal(a: &Object, b: &Object) -> bool {
-    match (a, b) {
-        (Object::Nil, Object::Nil) => true,
-        (Object::Boolean(a), Object::Boolean(b)) => a == b,
-        (Object::Number(a), Object::Number(b)) => a == b,
-        (Object::String(a), Object::String(b)) => a == b,
-        _ => false,
-    }
-}
-
-fn is_not_equal(a: &Object, b: &Object) -> bool {
-    !is_equal(a, b)
-}
-
 impl Visitor<Result<Object, RuntimeError>> for Interpreter {
     fn visit_number(
         &mut self,
@@ -100,7 +74,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                     ))
                 }
             }
-            UnaryOp::Not => Ok(Object::Boolean(is_falsy(&e))),
+            UnaryOp::Not => Ok(Object::Boolean(e.is_falsy())),
         }
     }
 
@@ -186,8 +160,8 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                     ))
                 }
             }
-            BinaryOp::Eq => Ok(Object::Boolean(is_equal(&left, &right))),
-            BinaryOp::Ne => Ok(Object::Boolean(is_not_equal(&left, &right))),
+            BinaryOp::Eq => Ok(Object::Boolean(left.is_equal(&right))),
+            BinaryOp::Ne => Ok(Object::Boolean(left.is_not_equal(&right))),
             BinaryOp::Lt => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
                     Ok(Object::Boolean(left < right))
