@@ -173,7 +173,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
             }
             BinaryOp::Div => {
                 if let (Object::Number(left), Object::Number(right)) = (left, right) {
-                    if (right == 0.0) {
+                    if right == 0.0 {
                         Ok(Object::NaN)
                     } else {
                         Ok(Object::Number(left / right))

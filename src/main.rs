@@ -98,6 +98,10 @@ fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> 
 }
 
 fn exec_line(input: &str, state: &mut LoxState, _stop_flag: &repl::StopFlag) {
+    if input.trim().is_empty() {
+        return;
+    }
+
     // TODO: Maybe move the stop flag into the state?
     let expr = parse_line(input, state);
     match expr {
