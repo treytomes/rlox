@@ -215,7 +215,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         expr: &Box<Expr>,
     ) -> Result<Object, RuntimeError> {
         let value = expr.accept(self)?;
-        print!("{}\r\n", value);
+        print!("{}", value);
         Ok(Object::Nil)
     }
 

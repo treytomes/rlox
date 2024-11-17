@@ -19,10 +19,10 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - NaN is not equal to anything.
 - The result of the last expression will be automatically returned to the user.
 - The last statement need not end with a semicolon.
+- String escape sequences for: \n, \r, \t, \", \\
 
 ## TODO
 
-- Implement escape sequences in strings.
 - Implement comma-separated expression parsing.
     - Only return the result of the right-most expression to the user for that sequence.
         - Unless this is a function argument list.

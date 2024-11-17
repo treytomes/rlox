@@ -208,6 +208,10 @@ impl Scanner {
                 self.line += 1;
                 self.column = 0;
             }
+            if self.peek() == '\\' {
+                // Skip over the escape character.
+                self.advance();
+            }
             self.advance();
         }
         if self.is_at_end() {
@@ -222,9 +226,17 @@ impl Scanner {
         self.advance();
 
         let value = &self.source[self.start + 1..self.current - 1];
+        // Trim the surrounding quotes.
+        let value = value
+            .replace("\\t", "\t")
+            .replace("\\n", "\n")
+            .replace("\\r", "\r")
+            .replace("\\\\", "\\")
+            .replace("\\", "\"");
+
         self.tokens.push(Token::new(
             TokenType::String,
-            value,
+            value.as_str(),
             Literal::String(value.to_string()),
             self.line,
             self.column,
