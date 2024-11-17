@@ -1,9 +1,6 @@
-use std::io::{self, Write};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-
 use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use std::io::{self, Write};
 
 use crate::interpreter::HasStopFlag;
 
@@ -18,6 +15,7 @@ fn handle_enter<TCallback, TState>(
     TCallback: FnMut(&str, &mut TState),
     TState: HasStopFlag,
 {
+    print!("\r\n");
     callback(&input_buffer, state);
     input_buffer.clear();
     *cursor_position = 0;
