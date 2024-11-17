@@ -17,6 +17,8 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - Any number != 0 is truthy.
 - Equalness:
     - NaN is not equal to anything.
+- The result of the last expression will be automatically returned to the user.
+- The last statement need not end with a semicolon.
 
 ## TODO
 
@@ -30,6 +32,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - I expect this will be above the precedence of equality.
     - If the if-statement is an if-expression, is this really necessary?
     - I do like a bit of syntactic sugar.
+- A program is essentially a block.  Refactor this later.
 
 ## Musings
 
@@ -44,3 +47,4 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - There's a lot of ways to do this.
 - I might use `let` instead of `var`.  `var` carries some bad JS vibes.
 - I think everything should be an "expression" of some sort.
+- I also like everything being an object.  I want to be able to do things like `(a > b).ifTrue(...).else(...)`.

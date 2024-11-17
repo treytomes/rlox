@@ -28,12 +28,31 @@ pub fn parse(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
         return Err(ParserError::new("unexpected end of file", 1, 1));
     }
 
-    let expr = parse_stmt(&mut stream)?;
+    let expr = parse_program(&mut stream)?;
     Ok(expr)
 }
 
+fn parse_program(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    let mut exprs = Vec::new();
+    while !stream.is_at_end() {
+        let expr = parse_stmt(stream)?;
+        exprs.push(expr);
+
+        if let Some(token) = stream.peek() {
+            // The last statement need not end with a semicolon.
+            if token.token_type != TokenType::Semicolon {
+                break;
+            }
+            stream.consume(TokenType::Semicolon)?;
+        }
+    }
+
+    Ok(Expr::program(&loc, exprs))
+}
+
 fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
-    if let Some(token) = stream.next() {
+    if let Some(token) = stream.peek() {
         match token.token_type {
             TokenType::Print => parse_stmt_print(stream),
             _ => parse_stmt_expr(stream),
@@ -52,13 +71,11 @@ fn parse_stmt_print(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let loc = FileLocation::from_loc(stream.peek().unwrap());
     stream.consume(TokenType::Print)?;
     let expr = parse_expr(stream)?;
-    stream.consume(TokenType::Semicolon)?;
     Ok(Expr::print(&loc, expr))
 }
 
 fn parse_stmt_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let expr = parse_expr(stream)?;
-    stream.consume(TokenType::Semicolon)?;
     Ok(expr)
 }
 

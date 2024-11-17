@@ -71,4 +71,16 @@ impl Visitor<String> for AstPrinter {
     fn visit_print(&mut self, _loc: &dyn HasFileLocation, expr: &Box<Expr>) -> String {
         format!("(print {})", expr.accept(self))
     }
+
+    fn visit_program(&mut self, _loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> String {
+        let mut s = String::new();
+        s.push_str("(program \r\n");
+        for expr in exprs {
+            s.push_str("\t");
+            s.push_str(&expr.accept(self));
+            s.push_str("\r\n");
+        }
+        s.push_str(")");
+        s
+    }
 }

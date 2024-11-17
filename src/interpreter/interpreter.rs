@@ -218,4 +218,16 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         print!("{}\r\n", value);
         Ok(Object::Nil)
     }
+
+    fn visit_program(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        exprs: &Vec<Expr>,
+    ) -> Result<Object, RuntimeError> {
+        let mut last = Object::Nil;
+        for expr in exprs {
+            last = expr.accept(self)?;
+        }
+        Ok(last)
+    }
 }

@@ -16,6 +16,7 @@ pub enum Expr {
     BinaryOp(FileLocation, Box<Expr>, BinaryOp, Box<Expr>),
 
     PrintExpr(FileLocation, Box<Expr>),
+    Program(FileLocation, Box<Vec<Expr>>),
 }
 
 impl Expr {
@@ -61,6 +62,10 @@ impl Expr {
         Self::PrintExpr(FileLocation::from_loc(loc), Box::new(e))
     }
 
+    pub fn program(loc: &dyn HasFileLocation, exprs: Vec<Expr>) -> Self {
+        Self::Program(FileLocation::from_loc(loc), Box::new(exprs))
+    }
+
     pub fn accept<R>(&self, visitor: &mut dyn Visitor<R>) -> R {
         match self {
             Self::Number(loc, n) => visitor.visit_number(loc, n),
@@ -71,6 +76,7 @@ impl Expr {
             Self::UnaryOp(loc, op, e) => visitor.visit_unary_op(loc, op, e),
             Self::BinaryOp(loc, op, e1, e2) => visitor.visit_binary_op(loc, e1, op, e2),
             Self::PrintExpr(loc, e) => visitor.visit_print(loc, e),
+            Self::Program(loc, e) => visitor.visit_program(loc, e),
         }
     }
 }
