@@ -67,4 +67,8 @@ impl Visitor<String> for AstPrinter {
             BinaryOp::Ge => format!("(>= {} {})", e1.accept(self), e2.accept(self)),
         }
     }
+
+    fn visit_print(&mut self, _loc: &dyn HasFileLocation, expr: &Box<Expr>) -> String {
+        format!("(print {})", expr.accept(self))
+    }
 }

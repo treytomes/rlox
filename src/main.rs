@@ -25,7 +25,6 @@ const REPORT_AST: bool = false;
 // Define a struct to represent the REPL state
 struct LoxState {
     command_count: usize,
-    had_error: bool,
     stop_flag: Arc<AtomicBool>,
 }
 
@@ -93,14 +92,12 @@ fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> 
                 }
                 Err(err) => {
                     print_error_location(input, &err);
-                    state.had_error = true;
                     return Err(anyhow::Error::new(err).context("parsing error"));
                 }
             }
         }
         Err(err) => {
             print_error_location(input, &err);
-            state.had_error = true;
             return Err(anyhow::Error::new(err).context("lexing error"));
         }
     }
@@ -114,17 +111,14 @@ fn exec_line(input: &str, state: &mut LoxState) {
     let expr = parse_line(input, state);
     match expr {
         Ok(expr) => {
-            if !state.had_error {
-                // TODO: had_error will always be flipped if the result is an error?
-                let result = Interpreter::new().eval(&expr);
-                match result {
-                    Ok(value) => {
-                        // print!("result: {}\r\n", value);
-                        print!("\r\n{}\r\n", value);
-                    }
-                    Err(err) => {
-                        print_error_location(input, &err);
-                    }
+            let result = Interpreter::new().eval(&expr);
+            match result {
+                Ok(value) => {
+                    // print!("result: {}\r\n", value);
+                    print!("\r\n{}\r\n", value);
+                }
+                Err(err) => {
+                    print_error_location(input, &err);
                 }
             }
         }
@@ -134,8 +128,6 @@ fn exec_line(input: &str, state: &mut LoxState) {
             return;
         }
     }
-
-    state.had_error = false;
 }
 
 fn parse_lines(lines: &Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, anyhow::Error> {
@@ -154,31 +146,27 @@ fn exec_lines(lines: &Vec<String>, state: &mut LoxState) {
     let stop_flag = Arc::new(AtomicBool::new(false));
     match parse_lines(lines, state) {
         Ok(exprs) => {
-            if !state.had_error {
-                let mut interpreter = Interpreter::new();
+            let mut interpreter = Interpreter::new();
 
-                let mut final_result = Object::Nil;
-                for expr in exprs {
-                    let result = interpreter.eval(&expr);
-                    match result {
-                        Ok(value) => {
-                            final_result = value;
-                        }
-                        Err(err) => {
-                            state.had_error = true;
-                            print_error_location(lines[err.get_line() - 1].as_str(), &err);
-                            break;
-                        }
+            let mut final_result = Object::Nil;
+            for expr in exprs {
+                let result = interpreter.eval(&expr);
+                match result {
+                    Ok(value) => {
+                        final_result = value;
                     }
-                    if stop_flag.load(Ordering::Relaxed) {
+                    Err(err) => {
+                        print_error_location(lines[err.get_line() - 1].as_str(), &err);
                         break;
                     }
                 }
-                if !state.had_error {
-                    // print!("result: {}\r\n", final_result);
-                    print!("\r\n{}\r\n", final_result);
+                if stop_flag.load(Ordering::Relaxed) {
+                    break;
                 }
             }
+
+            // print!("result: {}\r\n", final_result);
+            print!("\r\n{}\r\n", final_result);
         }
         Err(err) => {
             eprint!("\r\nerror: {}\r\n", err);
@@ -209,7 +197,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut state = LoxState {
         command_count: 0,
-        had_error: false,
         stop_flag: Arc::new(AtomicBool::new(false)),
     };
 

@@ -14,6 +14,8 @@ pub enum Expr {
     // Variable(String),
     UnaryOp(FileLocation, UnaryOp, Box<Expr>),
     BinaryOp(FileLocation, Box<Expr>, BinaryOp, Box<Expr>),
+
+    PrintExpr(FileLocation, Box<Expr>),
 }
 
 impl Expr {
@@ -55,6 +57,10 @@ impl Expr {
         Self::BinaryOp(FileLocation::from_loc(loc), Box::new(e1), op, Box::new(e2))
     }
 
+    pub fn print(loc: &dyn HasFileLocation, e: Expr) -> Self {
+        Self::PrintExpr(FileLocation::from_loc(loc), Box::new(e))
+    }
+
     pub fn accept<R>(&self, visitor: &mut dyn Visitor<R>) -> R {
         match self {
             Self::Number(loc, n) => visitor.visit_number(loc, n),
@@ -64,6 +70,7 @@ impl Expr {
             Self::Grouping(loc, e) => visitor.visit_grouping(loc, e),
             Self::UnaryOp(loc, op, e) => visitor.visit_unary_op(loc, op, e),
             Self::BinaryOp(loc, op, e1, e2) => visitor.visit_binary_op(loc, e1, op, e2),
+            Self::PrintExpr(loc, e) => visitor.visit_print(loc, e),
         }
     }
 }

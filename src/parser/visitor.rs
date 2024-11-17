@@ -16,4 +16,5 @@ pub trait Visitor<R> {
         e1: &Box<Expr>,
         e2: &Box<Expr>,
     ) -> R;
+    fn visit_print(&mut self, loc: &dyn HasFileLocation, expr: &Box<Expr>) -> R;
 }

@@ -1,4 +1,9 @@
-use crate::lexer::{Token, TokenType};
+use crate::{
+    debug::HasFileLocation,
+    lexer::{Token, TokenType},
+};
+
+use super::ParserError;
 
 pub struct TokenStream {
     tokens: Vec<Token>,
@@ -8,6 +13,13 @@ pub struct TokenStream {
 impl TokenStream {
     pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, index: 0 }
+    }
+
+    pub fn prev(&self) -> Option<&Token> {
+        if self.index == 0 {
+            return None;
+        }
+        self.tokens.get(self.index - 1)
     }
 
     pub fn peek(&mut self) -> Option<&Token> {
@@ -29,7 +41,7 @@ impl TokenStream {
         token
     }
 
-    fn is_at_end(&self) -> bool {
+    pub fn is_at_end(&self) -> bool {
         self.index >= self.tokens.len()
     }
 
@@ -52,5 +64,23 @@ impl TokenStream {
                 break;
             }
         }
+    }
+
+    pub fn consume(&mut self, token_type: TokenType) -> Result<Token, ParserError> {
+        if let Some(token) = self.next() {
+            if token.token_type == token_type {
+                return Ok(token.clone());
+            }
+            return Err(ParserError::new(
+                format!("expected '{:?}'", token_type).as_str(),
+                token.get_line(),
+                token.get_column(),
+            ));
+        }
+        Err(ParserError::new(
+            format!("expected '{:?}'", token_type).as_str(),
+            0,
+            0,
+        ))
     }
 }

@@ -1,5 +1,10 @@
 /**
  * The token parser for this language grammar:
+ * program        → statement* EOF ;
+ * statement      → exprStmt
+ *                | printStmt ";" ;
+ * printStmt      → "print" expression ";" ;
+ * exprStmt       → expression ";" ;
  * expression     → equality ;
  * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
  * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -19,7 +24,41 @@ use super::{BinaryOp, Expr, ParserError, TokenStream, UnaryOp};
 
 pub fn parse(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
     let mut stream = TokenStream::new(tokens.clone());
-    let expr = parse_expr(&mut stream)?;
+    if stream.is_at_end() {
+        return Err(ParserError::new("unexpected end of file", 1, 1));
+    }
+
+    let expr = parse_stmt(&mut stream)?;
+    Ok(expr)
+}
+
+fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    if let Some(token) = stream.next() {
+        match token.token_type {
+            TokenType::Print => parse_stmt_print(stream),
+            _ => parse_stmt_expr(stream),
+        }
+    } else {
+        let prev = stream.prev().unwrap();
+        Err(ParserError::new(
+            "unexpected end of file",
+            prev.get_line(),
+            prev.get_column(),
+        ))
+    }
+}
+
+fn parse_stmt_print(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    stream.consume(TokenType::Print)?;
+    let expr = parse_expr(stream)?;
+    stream.consume(TokenType::Semicolon)?;
+    Ok(Expr::print(&loc, expr))
+}
+
+fn parse_stmt_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let expr = parse_expr(stream)?;
+    stream.consume(TokenType::Semicolon)?;
     Ok(expr)
 }
 
@@ -132,13 +171,13 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             | TokenType::String => Ok(Expr::literal(&loc, token.literal.clone())),
             TokenType::LeftParen => {
                 let expr = parse_expr(stream)?;
-                consume(TokenType::RightParen, stream)?;
+                stream.consume(TokenType::RightParen)?;
                 Ok(Expr::grouping(&loc, expr))
             }
             _ => Err(ParserError::new("expected expression", line, column)),
         }
     } else {
-        if let Some(token) = stream.current() {
+        if let Some(token) = stream.prev() {
             Err(ParserError::new(
                 "expected expression",
                 token.get_line(),
@@ -148,24 +187,6 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             Err(ParserError::new("expected expression", 0, 0))
         }
     }
-}
-
-fn consume(token_type: TokenType, stream: &mut TokenStream) -> Result<Token, ParserError> {
-    if let Some(token) = stream.next() {
-        if token.token_type == token_type {
-            return Ok(token.clone());
-        }
-        return Err(ParserError::new(
-            format!("expected '{:?}'", token_type).as_str(),
-            token.get_line(),
-            token.get_column(),
-        ));
-    }
-    Err(ParserError::new(
-        format!("expected '{:?}'", token_type).as_str(),
-        0,
-        0,
-    ))
 }
 
 fn synchronize(stream: &mut TokenStream) {

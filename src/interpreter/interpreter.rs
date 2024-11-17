@@ -208,4 +208,14 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
             }
         }
     }
+
+    fn visit_print(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        expr: &Box<Expr>,
+    ) -> Result<Object, RuntimeError> {
+        let value = expr.accept(self)?;
+        print!("{}\r\n", value);
+        Ok(Object::Nil)
+    }
 }
