@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::debug::{FileLocation, HasFileLocation};
+use crate::debug::HasFileLocation;
 
 use super::{Object, RuntimeError};
 

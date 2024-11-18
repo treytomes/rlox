@@ -27,10 +27,6 @@ impl TokenStream {
         self.tokens.get(self.index)
     }
 
-    pub fn current(&self) -> Option<&Token> {
-        self.tokens.get(self.index)
-    }
-
     pub fn next(&mut self) -> Option<&Token> {
         if self.is_at_end() {
             return None;
