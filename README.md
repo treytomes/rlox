@@ -26,6 +26,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Variable assignment is an expression, which means this: `a = b = 10`, will assign `a` and `b` to 10.
     - You can also do this to print and assign `b` at the same time: `print b=10`.
     - You cannot similarly cascade the `let` statement at this time.
+- The result of the most recent statement will be stored in the `_` variable.
 
 ## TODO
 
@@ -38,6 +39,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - A program is essentially a block.  Refactor this later.
 - Test synchronization and the ErrorSet.
     - Parsing should continue after an error is found, then a list of errors should be returned to the user.
+    - The error indicators are lining up correctly right now?
 
 ## Musings
 

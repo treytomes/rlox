@@ -19,6 +19,19 @@ impl Interpreter {
     pub fn eval(&mut self, expr: &Expr) -> Result<Object, RuntimeError> {
         expr.accept(self)
     }
+
+    fn store_result(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        result: Object,
+    ) -> Result<(), RuntimeError> {
+        if !self.environment.is_defined("_") {
+            self.environment.define(loc, "_", result)?;
+        } else {
+            self.environment.assign(loc, "_", result)?;
+        }
+        Ok(())
+    }
 }
 
 impl Visitor<Result<Object, RuntimeError>> for Interpreter {
@@ -261,12 +274,13 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
 
     fn visit_program(
         &mut self,
-        _loc: &dyn HasFileLocation,
+        loc: &dyn HasFileLocation,
         exprs: &Vec<Expr>,
     ) -> Result<Object, RuntimeError> {
         let mut last = Object::Nil;
         for expr in exprs {
             last = expr.accept(self)?;
+            self.store_result(loc, last.clone())?;
         }
         Ok(last)
     }
