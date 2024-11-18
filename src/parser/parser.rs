@@ -40,7 +40,7 @@ fn parse_program(stream: &mut TokenStream) -> Result<Expr, ErrorSet> {
     let loc = FileLocation::from_loc(stream.peek().unwrap());
     let mut exprs = Vec::new();
     let mut errors = ErrorSet::new();
-    while !stream.is_at_end() {
+    while !stream.is_at_end() && !stream.match_token(vec![TokenType::EOF]) {
         match parse_stmt(stream) {
             Ok(expr) => exprs.push(expr),
             Err(e) => {
