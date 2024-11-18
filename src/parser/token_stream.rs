@@ -46,6 +46,20 @@ impl TokenStream {
     }
 
     /**
+     * Check if the next token is of the given type.
+     * Consume the token if it is a match.
+     */
+    pub fn match_token(&mut self, token_types: Vec<TokenType>) -> bool {
+        if let Some(token) = self.peek() {
+            if token_types.contains(&token.token_type) {
+                self.index += 1;
+                return true;
+            }
+        }
+        false
+    }
+
+    /**
      * Skip any tokens that don't provide value to the output expression.
      */
     fn skip_space(&mut self) {

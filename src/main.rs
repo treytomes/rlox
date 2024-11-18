@@ -8,11 +8,10 @@ mod repl;
 use app_info::AppInfo;
 use atty::Stream;
 use clap::{Arg, Command};
-use debug::HasFileLocation;
+use debug::{HasFileLocation, LocatableError};
 use interpreter::{HasStopFlag, Interpreter, Object};
 use lexer::scan_tokens;
 use parser::{parse, AstPrinter, Expr};
-use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -24,7 +23,7 @@ const REPORT_AST: bool = false;
 
 // Define a struct to represent the REPL state
 struct LoxState {
-    command_count: usize,
+    interpreter: Interpreter,
     stop_flag: Arc<AtomicBool>,
 }
 
@@ -45,37 +44,7 @@ fn print_tokens(tokens: &Vec<lexer::Token>) {
     }
 }
 
-fn print_error_location<E>(input: &str, err: &E)
-where
-    E: HasFileLocation + Error,
-{
-    eprint!("\r\nerror: {}\r\n", err);
-
-    // Take the 3rd line out the input text.
-    let lines: Vec<&str> = input.split('\n').collect();
-    let line = lines[err.get_line() - 1];
-
-    // Convert line to a string and get the length of it.
-    let len = err.get_line().to_string().len();
-
-    eprint!("\r\n");
-    eprint!("{} | {}\r\n", err.get_line(), line);
-    eprint!(
-        "{:>width$}-- Here.\r\n",
-        "^",
-        width = err.get_column() + len + 3
-    );
-}
-
-fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> {
-    state.command_count += 1;
-    if REPORT_COUNT {
-        print!(
-            "\r\ncallback: you entered '{}', command count: {}\r\n",
-            input, state.command_count
-        );
-    }
-
+fn parse_line(input: &str) -> Result<Expr, anyhow::Error> {
     let tokens = scan_tokens(input);
     match tokens {
         Ok(tokens) => {
@@ -91,13 +60,14 @@ fn parse_line(input: &str, state: &mut LoxState) -> Result<Expr, anyhow::Error> 
                     return Ok(expr);
                 }
                 Err(err) => {
-                    print_error_location(input, &err);
-                    return Err(anyhow::Error::new(err).context("parsing error"));
+                    err.report(input);
+                    return Err(anyhow::Error::new(err));
+                    //).context("parsing error"));
                 }
             }
         }
         Err(err) => {
-            print_error_location(input, &err);
+            err.report(input);
             return Err(anyhow::Error::new(err).context("lexing error"));
         }
     }
@@ -108,17 +78,17 @@ fn exec_line(input: &str, state: &mut LoxState) {
         return;
     }
 
-    let expr = parse_line(input, state);
+    let expr = parse_line(input);
     match expr {
         Ok(expr) => {
-            let result = Interpreter::new().eval(&expr);
+            let result = state.interpreter.eval(&expr);
             match result {
                 Ok(value) => {
                     // print!("result: {}\r\n", value);
                     print!("\r\n{}\r\n", value);
                 }
                 Err(err) => {
-                    print_error_location(input, &err);
+                    err.report(input);
                 }
             }
         }
@@ -130,13 +100,13 @@ fn exec_line(input: &str, state: &mut LoxState) {
     }
 }
 
-fn parse_lines(lines: &Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, anyhow::Error> {
+fn parse_lines(lines: &Vec<String>) -> Result<Vec<Expr>, anyhow::Error> {
     let mut exprs: Vec<Expr> = vec![];
     for line in lines {
         if line.trim().is_empty() {
             continue;
         }
-        exprs.push(parse_line(&line, state)?);
+        exprs.push(parse_line(&line)?);
     }
     Ok(exprs)
 }
@@ -144,19 +114,17 @@ fn parse_lines(lines: &Vec<String>, state: &mut LoxState) -> Result<Vec<Expr>, a
 // TODO: This one won't function correctly until line separators are implemented.
 fn exec_lines(lines: &Vec<String>, state: &mut LoxState) {
     let stop_flag = Arc::new(AtomicBool::new(false));
-    match parse_lines(lines, state) {
+    match parse_lines(lines) {
         Ok(exprs) => {
-            let mut interpreter = Interpreter::new();
-
             let mut final_result = Object::Nil;
             for expr in exprs {
-                let result = interpreter.eval(&expr);
+                let result = state.interpreter.eval(&expr);
                 match result {
                     Ok(value) => {
                         final_result = value;
                     }
                     Err(err) => {
-                        print_error_location(lines[err.get_line() - 1].as_str(), &err);
+                        err.report(lines[err.get_line() - 1].as_str());
                         break;
                     }
                 }
@@ -196,7 +164,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .get_matches();
 
     let mut state = LoxState {
-        command_count: 0,
+        interpreter: Interpreter::new(),
         stop_flag: Arc::new(AtomicBool::new(false)),
     };
 

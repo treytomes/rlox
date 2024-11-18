@@ -2,7 +2,9 @@
  * The token parser for this language grammar:
  * program        → statement* EOF ;
  * statement      → exprStmt
- *                | printStmt ";" ;
+ *                | letStmt
+ *                | printStmt ;
+ * letStmt        → "let" IDENTIFIER ( "=" expression )? ";" ;
  * printStmt      → "print" expression ";" ;
  * exprStmt       → expression ";" ;
  * expression     → equality ;
@@ -16,45 +18,66 @@
  *                | "(" expression ")" ;
  */
 use crate::{
-    debug::{FileLocation, HasFileLocation},
+    debug::{ErrorSet, FileLocation, HasFileLocation},
     lexer::{Token, TokenType},
 };
 
 use super::{BinaryOp, Expr, ParserError, TokenStream, UnaryOp};
 
-pub fn parse(tokens: &Vec<Token>) -> Result<Expr, ParserError> {
+pub fn parse(tokens: &Vec<Token>) -> Result<Expr, ErrorSet> {
     let mut stream = TokenStream::new(tokens.clone());
     if stream.is_at_end() {
-        return Err(ParserError::new("unexpected end of file", 1, 1));
+        let mut errors = ErrorSet::new();
+        errors.push(ParserError::new("unexpected end of file", 1, 1));
+        return Err(errors);
     }
 
     let expr = parse_program(&mut stream)?;
     Ok(expr)
 }
 
-fn parse_program(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+fn parse_program(stream: &mut TokenStream) -> Result<Expr, ErrorSet> {
     let loc = FileLocation::from_loc(stream.peek().unwrap());
     let mut exprs = Vec::new();
+    let mut errors = ErrorSet::new();
     while !stream.is_at_end() {
-        let expr = parse_stmt(stream)?;
-        exprs.push(expr);
+        match parse_stmt(stream) {
+            Ok(expr) => exprs.push(expr),
+            Err(e) => {
+                errors.push(e);
+                synchronize(stream);
+                continue;
+            }
+        };
 
         if let Some(token) = stream.peek() {
             // The last statement need not end with a semicolon.
             if !vec![TokenType::Comma, TokenType::Semicolon].contains(&token.token_type) {
                 break;
             }
-            stream.consume(vec![TokenType::Comma, TokenType::Semicolon])?;
+            match stream.consume(vec![TokenType::Comma, TokenType::Semicolon]) {
+                Ok(_) => continue,
+                Err(e) => {
+                    errors.push(e);
+                    synchronize(stream);
+                    continue;
+                }
+            }
         }
     }
 
-    Ok(Expr::program(&loc, exprs))
+    if errors.is_empty() {
+        Ok(Expr::program(&loc, exprs))
+    } else {
+        Err(errors)
+    }
 }
 
 fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     if let Some(token) = stream.peek() {
         match token.token_type {
             TokenType::Print => parse_stmt_print(stream),
+            TokenType::Let => parse_stmt_let(stream),
             _ => parse_stmt_expr(stream),
         }
     } else {
@@ -67,6 +90,23 @@ fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     }
 }
 
+fn parse_stmt_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let expr = parse_expr(stream)?;
+    Ok(expr)
+}
+
+fn parse_stmt_let(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    stream.consume(vec![TokenType::Let])?;
+    let name = stream.consume(vec![TokenType::Identifier])?;
+    let initializer = if stream.match_token(vec![TokenType::Equal]) {
+        Some(parse_expr(stream)?)
+    } else {
+        None
+    };
+    Ok(Expr::let_stmt(&loc, name.lexeme.clone(), initializer))
+}
+
 fn parse_stmt_print(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let loc = FileLocation::from_loc(stream.peek().unwrap());
     stream.consume(vec![TokenType::Print])?;
@@ -74,13 +114,26 @@ fn parse_stmt_print(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     Ok(Expr::print(&loc, expr))
 }
 
-fn parse_stmt_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
-    let expr = parse_expr(stream)?;
-    Ok(expr)
+fn parse_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    parse_assignment(stream)
 }
 
-fn parse_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
-    parse_equality(stream)
+fn parse_assignment(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    let expr = parse_equality(stream)?;
+    if stream.match_token(vec![TokenType::Equal]) {
+        let value = parse_assignment(stream)?;
+        match expr {
+            Expr::Variable(_, name) => Ok(Expr::assign(&loc, name, value)),
+            _ => Err(ParserError::new(
+                "invalid assignment target",
+                loc.get_line(),
+                loc.get_column(),
+            )),
+        }
+    } else {
+        Ok(expr)
+    }
 }
 
 fn parse_equality(stream: &mut TokenStream) -> Result<Expr, ParserError> {
@@ -185,7 +238,8 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             | TokenType::True
             | TokenType::Nil
             | TokenType::Number
-            | TokenType::String => Ok(Expr::literal(&loc, token.literal.clone())),
+            | TokenType::String
+            | TokenType::Identifier => Ok(Expr::literal(&loc, token.literal.clone())),
             TokenType::LeftParen => {
                 let expr = parse_expr(stream)?;
                 stream.consume(vec![TokenType::RightParen])?;
@@ -210,14 +264,14 @@ fn synchronize(stream: &mut TokenStream) {
     stream.next();
 
     while let Some(token) = stream.peek() {
-        if token.token_type == TokenType::Semicolon {
+        if vec![TokenType::Comma, TokenType::Semicolon].contains(&token.token_type) {
             return;
         }
 
         match token.token_type {
             TokenType::Class
             | TokenType::Fun
-            | TokenType::Var
+            | TokenType::Let
             | TokenType::For
             | TokenType::If
             | TokenType::While

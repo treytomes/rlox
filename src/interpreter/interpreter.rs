@@ -3,13 +3,17 @@ use crate::{
     parser::{BinaryOp, Expr, UnaryOp, Visitor},
 };
 
-use super::{Object, RuntimeError};
+use super::{Environment, Object, RuntimeError};
 
-pub struct Interpreter {}
+pub struct Interpreter {
+    environment: Environment,
+}
 
 impl Interpreter {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            environment: Environment::new(),
+        }
     }
 
     pub fn eval(&mut self, expr: &Expr) -> Result<Object, RuntimeError> {
@@ -217,6 +221,42 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         let value = expr.accept(self)?;
         print!("{}", value);
         Ok(Object::Nil)
+    }
+
+    fn visit_let(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        name: &String,
+    ) -> Result<Object, RuntimeError> {
+        self.environment.define(loc, name, Object::Nil)
+    }
+
+    fn visit_let_init(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        name: &String,
+        expr: &Box<Expr>,
+    ) -> Result<Object, RuntimeError> {
+        let value = expr.accept(self)?;
+        self.environment.define(loc, &name, value)
+    }
+
+    fn visit_assign(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        name: &String,
+        expr: &Box<Expr>,
+    ) -> Result<Object, RuntimeError> {
+        let value = expr.accept(self)?;
+        self.environment.assign(loc, name, value)
+    }
+
+    fn visit_variable(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        name: &String,
+    ) -> Result<Object, RuntimeError> {
+        self.environment.get(loc, name)
     }
 
     fn visit_program(

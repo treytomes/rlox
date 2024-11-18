@@ -1,6 +1,6 @@
 use crate::debug::HasFileLocation;
 
-use super::{expr, BinaryOp, Expr, UnaryOp};
+use super::{BinaryOp, Expr, UnaryOp};
 
 pub trait Visitor<R> {
     fn visit_number(&mut self, loc: &dyn HasFileLocation, n: &f64) -> R;
@@ -17,5 +17,9 @@ pub trait Visitor<R> {
         e2: &Box<Expr>,
     ) -> R;
     fn visit_print(&mut self, loc: &dyn HasFileLocation, expr: &Box<Expr>) -> R;
+    fn visit_let(&mut self, loc: &dyn HasFileLocation, name: &String) -> R;
+    fn visit_let_init(&mut self, loc: &dyn HasFileLocation, name: &String, expr: &Box<Expr>) -> R;
+    fn visit_assign(&mut self, loc: &dyn HasFileLocation, name: &String, expr: &Box<Expr>) -> R;
     fn visit_program(&mut self, loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> R;
+    fn visit_variable(&mut self, loc: &dyn HasFileLocation, name: &String) -> R;
 }

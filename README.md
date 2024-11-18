@@ -22,6 +22,10 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - String escape sequences for: \n, \r, \t, \", \\
 - Variable declarations are allowed anywhere, just like any other statement.
 - Expressions can be delimited by commas, which incidentally causes them to function just like semicolons.
+- Variables must be defined before they are used, and cannot be defined multiple times.
+- Variable assignment is an expression, which means this: `a = b = 10`, will assign `a` and `b` to 10.
+    - You can also do this to print and assign `b` at the same time: `print b=10`.
+    - You cannot similarly cascade the `let` statement at this time.
 
 ## TODO
 
@@ -32,6 +36,8 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - If the if-statement is an if-expression, is this really necessary?
     - I do like a bit of syntactic sugar.
 - A program is essentially a block.  Refactor this later.
+- Test synchronization and the ErrorSet.
+    - Parsing should continue after an error is found, then a list of errors should be returned to the user.
 
 ## Musings
 

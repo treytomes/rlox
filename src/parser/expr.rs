@@ -11,12 +11,15 @@ pub enum Expr {
     Boolean(FileLocation, bool),
     Nil(FileLocation),
     Grouping(FileLocation, Box<Expr>),
-    // Variable(String),
+    Variable(FileLocation, String),
     UnaryOp(FileLocation, UnaryOp, Box<Expr>),
     BinaryOp(FileLocation, Box<Expr>, BinaryOp, Box<Expr>),
 
     PrintExpr(FileLocation, Box<Expr>),
     Program(FileLocation, Box<Vec<Expr>>),
+    Let(FileLocation, String),
+    LetInit(FileLocation, String, Box<Expr>),
+    Assign(FileLocation, String, Box<Expr>),
 }
 
 impl Expr {
@@ -32,13 +35,17 @@ impl Expr {
         Self::Boolean(FileLocation::from_loc(loc), b)
     }
 
+    pub fn variable(loc: &dyn HasFileLocation, v: String) -> Self {
+        Self::Variable(FileLocation::from_loc(loc), v)
+    }
+
     pub fn literal(loc: &dyn HasFileLocation, l: Literal) -> Self {
         match l {
             Literal::Number(n) => Self::number(loc, n),
             Literal::String(s) => Self::string(loc, s),
             Literal::Boolean(b) => Self::boolean(loc, b),
             Literal::Nil => Self::nil(loc),
-            Literal::Identifier(_) => todo!(),
+            Literal::Identifier(v) => Self::variable(loc, v),
         }
     }
 
@@ -62,8 +69,19 @@ impl Expr {
         Self::PrintExpr(FileLocation::from_loc(loc), Box::new(e))
     }
 
+    pub fn let_stmt(loc: &dyn HasFileLocation, name: String, e: Option<Expr>) -> Self {
+        match e {
+            Some(e) => Self::LetInit(FileLocation::from_loc(loc), name, Box::new(e)),
+            None => Self::Let(FileLocation::from_loc(loc), name),
+        }
+    }
+
     pub fn program(loc: &dyn HasFileLocation, exprs: Vec<Expr>) -> Self {
         Self::Program(FileLocation::from_loc(loc), Box::new(exprs))
+    }
+
+    pub fn assign(loc: &dyn HasFileLocation, name: String, e: Expr) -> Self {
+        Self::Assign(FileLocation::from_loc(loc), name, Box::new(e))
     }
 
     pub fn accept<R>(&self, visitor: &mut dyn Visitor<R>) -> R {
@@ -76,7 +94,11 @@ impl Expr {
             Self::UnaryOp(loc, op, e) => visitor.visit_unary_op(loc, op, e),
             Self::BinaryOp(loc, op, e1, e2) => visitor.visit_binary_op(loc, e1, op, e2),
             Self::PrintExpr(loc, e) => visitor.visit_print(loc, e),
+            Self::Let(loc, name) => visitor.visit_let(loc, name),
+            Self::LetInit(loc, name, e) => visitor.visit_let_init(loc, name, e),
+            Self::Assign(loc, name, e) => visitor.visit_assign(loc, name, e),
             Self::Program(loc, e) => visitor.visit_program(loc, e),
+            Self::Variable(loc, name) => visitor.visit_variable(loc, name),
         }
     }
 }

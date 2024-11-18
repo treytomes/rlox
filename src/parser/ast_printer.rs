@@ -72,6 +72,28 @@ impl Visitor<String> for AstPrinter {
         format!("(print {})", expr.accept(self))
     }
 
+    fn visit_let(&mut self, _loc: &dyn HasFileLocation, name: &String) -> String {
+        format!("(let {})", name)
+    }
+
+    fn visit_let_init(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        name: &String,
+        expr: &Box<Expr>,
+    ) -> String {
+        format!("(let {} {})", name, expr.accept(self))
+    }
+
+    fn visit_assign(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        name: &String,
+        expr: &Box<Expr>,
+    ) -> String {
+        format!("(= {} {})", name, expr.accept(self))
+    }
+
     fn visit_program(&mut self, _loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> String {
         let mut s = String::new();
         s.push_str("(program \r\n");
@@ -82,5 +104,9 @@ impl Visitor<String> for AstPrinter {
         }
         s.push_str(")");
         s
+    }
+
+    fn visit_variable(&mut self, _loc: &dyn HasFileLocation, name: &String) -> String {
+        format!("(var {})", name)
     }
 }

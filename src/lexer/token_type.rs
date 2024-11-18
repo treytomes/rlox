@@ -50,7 +50,7 @@ pub enum TokenType {
     Super,
     This,
     True,
-    Var,
+    Let, // Original spec used "var" here.
     While,
 
     EOF,
@@ -98,7 +98,7 @@ impl Display for TokenType {
             TokenType::Super => "Super",
             TokenType::This => "This",
             TokenType::True => "True",
-            TokenType::Var => "Var",
+            TokenType::Let => "Let",
             TokenType::While => "While",
             TokenType::EOF => "EOF",
         };
