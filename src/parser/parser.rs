@@ -41,10 +41,10 @@ fn parse_program(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
         if let Some(token) = stream.peek() {
             // The last statement need not end with a semicolon.
-            if token.token_type != TokenType::Semicolon {
+            if !vec![TokenType::Comma, TokenType::Semicolon].contains(&token.token_type) {
                 break;
             }
-            stream.consume(TokenType::Semicolon)?;
+            stream.consume(vec![TokenType::Comma, TokenType::Semicolon])?;
         }
     }
 
@@ -69,7 +69,7 @@ fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
 fn parse_stmt_print(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let loc = FileLocation::from_loc(stream.peek().unwrap());
-    stream.consume(TokenType::Print)?;
+    stream.consume(vec![TokenType::Print])?;
     let expr = parse_expr(stream)?;
     Ok(Expr::print(&loc, expr))
 }
@@ -188,7 +188,7 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             | TokenType::String => Ok(Expr::literal(&loc, token.literal.clone())),
             TokenType::LeftParen => {
                 let expr = parse_expr(stream)?;
-                stream.consume(TokenType::RightParen)?;
+                stream.consume(vec![TokenType::RightParen])?;
                 Ok(Expr::grouping(&loc, expr))
             }
             _ => Err(ParserError::new("expected expression", line, column)),

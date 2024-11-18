@@ -66,19 +66,40 @@ impl TokenStream {
         }
     }
 
-    pub fn consume(&mut self, token_type: TokenType) -> Result<Token, ParserError> {
+    // pub fn consume(&mut self, token_type: TokenType) -> Result<Token, ParserError> {
+    //     if let Some(token) = self.next() {
+    //         if token.token_type == token_type {
+    //             return Ok(token.clone());
+    //         }
+    //         return Err(ParserError::new(
+    //             format!("expected '{:?}'", token_type).as_str(),
+    //             token.get_line(),
+    //             token.get_column(),
+    //         ));
+    //     }
+    //     Err(ParserError::new(
+    //         format!("expected '{:?}'", token_type).as_str(),
+    //         0,
+    //         0,
+    //     ))
+    // }
+
+    /**
+     * Consume the next token if its type is in token_types.
+     */
+    pub fn consume(&mut self, token_types: Vec<TokenType>) -> Result<Token, ParserError> {
         if let Some(token) = self.next() {
-            if token.token_type == token_type {
+            if token_types.contains(&token.token_type) {
                 return Ok(token.clone());
             }
             return Err(ParserError::new(
-                format!("expected '{:?}'", token_type).as_str(),
+                format!("expected one of {:?}", token_types).as_str(),
                 token.get_line(),
                 token.get_column(),
             ));
         }
         Err(ParserError::new(
-            format!("expected '{:?}'", token_type).as_str(),
+            format!("expected one of {:?}", token_types).as_str(),
             0,
             0,
         ))
