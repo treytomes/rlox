@@ -51,6 +51,28 @@ impl Environment {
         Ok(())
     }
 
+    fn assert_not_locally_defined(
+        &self,
+        loc: &dyn HasFileLocation,
+        name: &str,
+    ) -> Result<(), RuntimeError> {
+        if self.is_locally_defined(name) {
+            return Err(self.err_already_defined(loc, name));
+        }
+        Ok(())
+    }
+
+    fn assert_locally_defined(
+        &self,
+        loc: &dyn HasFileLocation,
+        name: &str,
+    ) -> Result<(), RuntimeError> {
+        if !self.is_defined(name) {
+            return Err(self.err_not_defined(loc, name));
+        }
+        Ok(())
+    }
+
     fn assert_defined(&self, loc: &dyn HasFileLocation, name: &str) -> Result<(), RuntimeError> {
         if !self.is_defined(name) {
             return Err(self.err_not_defined(loc, name));
@@ -64,7 +86,7 @@ impl Environment {
         name: &str,
         value: Object,
     ) -> Result<Object, RuntimeError> {
-        self.assert_not_defined(loc, name)?;
+        self.assert_not_locally_defined(loc, name)?;
         self.values.insert(name.to_string(), value);
         self.get(loc, name)
     }
@@ -84,9 +106,14 @@ impl Environment {
         name: &str,
         value: Object,
     ) -> Result<Object, RuntimeError> {
-        self.assert_defined(loc, name)?;
-        self.values.insert(name.to_string(), value);
-        self.get(loc, name)
+        if self.is_locally_defined(name) {
+            self.values.insert(name.to_string(), value);
+            return self.get(loc, name);
+        } else if self.enclosing.is_some() {
+            return self.enclosing.as_mut().unwrap().assign(loc, name, value);
+        } else {
+            return Err(self.err_not_defined(loc, name));
+        }
     }
 
     pub fn delete(
@@ -94,7 +121,7 @@ impl Environment {
         loc: &dyn HasFileLocation,
         name: &str,
     ) -> Result<Object, RuntimeError> {
-        self.assert_defined(loc, name)?;
+        self.assert_locally_defined(loc, name)?;
         self.values.remove(name);
         self.get(loc, name)
     }
