@@ -1,0 +1,45 @@
+print "Calculate the Golden Ratio in only 38 iterations!\r\n";
+
+let a = 1; // Seed the result.
+let c = 0; // Counter.
+
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+c=c+1; a=1+1/a; print "" + c + ". a=" + a + "\r\n";
+
+a; // Return the result to the user.

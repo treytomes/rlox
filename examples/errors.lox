@@ -1,0 +1,14 @@
+// Demonstrate finding all of the errors in this script.
+// There should be 2 errors.
+
+1;
+1 + 2;
+1 + 2 + 3;
+"hi!";
+
+-"asdf";
+1 + 2 + 3 + 4;
+1 + 2 + 3 + 4 + 5 +;
+
+"hmm";
+

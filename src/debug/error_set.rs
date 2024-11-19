@@ -23,11 +23,11 @@ impl ErrorSet {
     }
 
     pub fn report(&self, input: &str) {
-        eprint!("{}\r\n", self);
-
         for err in &self.errors {
             err.report(input);
         }
+
+        eprint!("\r\n{}\r\n", self);
     }
 }
 
