@@ -41,7 +41,6 @@ fn parse_program(stream: &mut TokenStream) -> Result<Expr, ErrorSet> {
     let mut exprs = Vec::new();
     let mut errors = ErrorSet::new();
     while !stream.is_at_end() {
-        print!(".\r\n");
         match parse_stmt(stream) {
             Ok(expr) => exprs.push(expr),
             Err(e) => {
@@ -52,16 +51,6 @@ fn parse_program(stream: &mut TokenStream) -> Result<Expr, ErrorSet> {
         };
 
         if let Some(token) = stream.prev() {
-            print!("previous token: {}\r\n", token);
-            if token.token_type == TokenType::RightBrace {
-                // The closing brace is the delimiter.
-                println!("continuing.\r\n");
-                continue;
-            }
-        }
-
-        if let Some(token) = stream.peek() {
-            print!("current token: {}\r\n", token);
             if token.token_type == TokenType::RightBrace {
                 // The closing brace is the delimiter.
                 continue;
@@ -158,6 +147,13 @@ fn parse_stmt_block(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             }
         };
 
+        if let Some(token) = stream.prev() {
+            if token.token_type == TokenType::RightBrace {
+                // The closing brace is the delimiter.
+                continue;
+            }
+        }
+
         if let Some(token) = stream.peek() {
             // The last statement need not end with a semicolon.
             if !vec![TokenType::Comma, TokenType::Semicolon].contains(&token.token_type) {
@@ -173,10 +169,6 @@ fn parse_stmt_block(stream: &mut TokenStream) -> Result<Expr, ParserError> {
         }
     }
     stream.consume(vec![TokenType::RightBrace])?;
-    print!(
-        "consumed right brace: {}\r\n",
-        stream.prev().unwrap().token_type
-    );
     Ok(Expr::block(&loc, exprs))
 }
 

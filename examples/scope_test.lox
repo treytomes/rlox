@@ -1,18 +1,21 @@
-let a=10;
-print "0 a=" + a + "\r\n";
-
+let a = "global a";
+let b = "global b";
+let c = "global c";
 {
-    print "1 a=" + a + "\r\n";
-    let a = 15;
-
-    print "2 a=" + a + "\r\n";
-    print "leaving scope\r\n";
+  let a = "outer a";
+  let b = "outer b";
+  {
+    let a = "inner a";
+    print "\t\t" + a+"\r\n";
+    print "\t\t" + b+"\r\n";
+    print "\t\t" + c+"\r\n";
+  }
+  print "\t" + a+"\r\n";
+  print "\t" + b+"\r\n";
+  print "\t" + c+"\r\n";
 }
-
-print "left scope\r\n";
-print "3 a=" + a + "\r\n";
-
-print "end\r\n";
+print a+"\r\n";
+print b+"\r\n";
+print c+"\r\n";
 
 "done"
-
