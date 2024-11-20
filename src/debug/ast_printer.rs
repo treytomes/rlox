@@ -1,6 +1,5 @@
-use crate::debug::HasFileLocation;
-
-use super::{BinaryOp, Expr, UnaryOp, Visitor};
+use super::HasFileLocation;
+use crate::parser::{BinaryOp, Expr, UnaryOp, Visitor};
 
 pub struct AstPrinter {
     indent_level: usize,
