@@ -3,21 +3,17 @@ use crate::{
     parser::{BinaryOp, Expr, UnaryOp, Visitor},
 };
 
-use super::{Environment, Object, RuntimeError};
+use super::{EnvironmentStack, Object, RuntimeError};
 
 pub struct Interpreter {
-    environment: Environment,
+    environments: EnvironmentStack,
 }
 
 impl Interpreter {
     pub fn new() -> Self {
         Self {
-            environment: Environment::root(),
+            environments: EnvironmentStack::new(),
         }
-    }
-
-    pub fn eval(&mut self, expr: &Expr) -> Result<Object, RuntimeError> {
-        expr.accept(self)
     }
 
     fn store_result(
@@ -25,12 +21,17 @@ impl Interpreter {
         loc: &dyn HasFileLocation,
         result: Object,
     ) -> Result<(), RuntimeError> {
-        if !self.environment.is_defined("_") {
-            self.environment.define(loc, "_", result)?;
+        // TODO: Only store _ globally.
+        if !self.environments.is_defined("_") {
+            self.environments.define_global(loc, "_", result)?;
         } else {
-            self.environment.assign(loc, "_", result)?;
+            self.environments.assign(loc, "_", result)?;
         }
         Ok(())
+    }
+
+    pub fn eval(&mut self, expr: &Expr) -> Result<Object, RuntimeError> {
+        expr.accept(self)
     }
 }
 
@@ -241,7 +242,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         loc: &dyn HasFileLocation,
         name: &String,
     ) -> Result<Object, RuntimeError> {
-        self.environment.define(loc, name, Object::Nil)
+        self.environments.define(loc, name, Object::Nil)
     }
 
     fn visit_let_init(
@@ -250,8 +251,8 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         name: &String,
         expr: &Box<Expr>,
     ) -> Result<Object, RuntimeError> {
-        let value = expr.accept(self)?;
-        self.environment.define(loc, &name, value)
+        let value: Object = expr.accept(self)?;
+        self.environments.define(loc, &name, value)
     }
 
     fn visit_assign(
@@ -261,7 +262,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         expr: &Box<Expr>,
     ) -> Result<Object, RuntimeError> {
         let value = expr.accept(self)?;
-        self.environment.assign(loc, name, value)
+        self.environments.assign(loc, name, value)
     }
 
     fn visit_variable(
@@ -269,7 +270,7 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         loc: &dyn HasFileLocation,
         name: &String,
     ) -> Result<Object, RuntimeError> {
-        self.environment.get(loc, name)
+        self.environments.get(loc, name)
     }
 
     fn visit_program(
@@ -282,6 +283,21 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
             last = expr.accept(self)?;
             self.store_result(loc, last.clone())?;
         }
+        Ok(last)
+    }
+
+    fn visit_block(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        exprs: &Vec<Expr>,
+    ) -> Result<Object, RuntimeError> {
+        self.environments.enter_scope();
+        let mut last = Object::Nil;
+        for expr in exprs {
+            last = expr.accept(self)?;
+            self.store_result(loc, last.clone())?;
+        }
+        self.environments.leave_scope(loc)?;
         Ok(last)
     }
 }

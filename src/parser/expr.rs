@@ -15,11 +15,12 @@ pub enum Expr {
     UnaryOp(FileLocation, UnaryOp, Box<Expr>),
     BinaryOp(FileLocation, Box<Expr>, BinaryOp, Box<Expr>),
 
-    PrintExpr(FileLocation, Box<Expr>),
+    Print(FileLocation, Box<Expr>),
     Program(FileLocation, Box<Vec<Expr>>),
     Let(FileLocation, String),
     LetInit(FileLocation, String, Box<Expr>),
     Assign(FileLocation, String, Box<Expr>),
+    Block(FileLocation, Box<Vec<Expr>>),
 }
 
 impl Expr {
@@ -66,7 +67,7 @@ impl Expr {
     }
 
     pub fn print(loc: &dyn HasFileLocation, e: Expr) -> Self {
-        Self::PrintExpr(FileLocation::from_loc(loc), Box::new(e))
+        Self::Print(FileLocation::from_loc(loc), Box::new(e))
     }
 
     pub fn let_stmt(loc: &dyn HasFileLocation, name: String, e: Option<Expr>) -> Self {
@@ -78,6 +79,10 @@ impl Expr {
 
     pub fn program(loc: &dyn HasFileLocation, exprs: Vec<Expr>) -> Self {
         Self::Program(FileLocation::from_loc(loc), Box::new(exprs))
+    }
+
+    pub fn block(loc: &dyn HasFileLocation, exprs: Vec<Expr>) -> Self {
+        Self::Block(FileLocation::from_loc(loc), Box::new(exprs))
     }
 
     pub fn assign(loc: &dyn HasFileLocation, name: String, e: Expr) -> Self {
@@ -93,12 +98,13 @@ impl Expr {
             Self::Grouping(loc, e) => visitor.visit_grouping(loc, e),
             Self::UnaryOp(loc, op, e) => visitor.visit_unary_op(loc, op, e),
             Self::BinaryOp(loc, op, e1, e2) => visitor.visit_binary_op(loc, e1, op, e2),
-            Self::PrintExpr(loc, e) => visitor.visit_print(loc, e),
+            Self::Print(loc, e) => visitor.visit_print(loc, e),
             Self::Let(loc, name) => visitor.visit_let(loc, name),
             Self::LetInit(loc, name, e) => visitor.visit_let_init(loc, name, e),
             Self::Assign(loc, name, e) => visitor.visit_assign(loc, name, e),
-            Self::Program(loc, e) => visitor.visit_program(loc, e),
             Self::Variable(loc, name) => visitor.visit_variable(loc, name),
+            Self::Program(loc, e) => visitor.visit_program(loc, e),
+            Self::Block(loc, e) => visitor.visit_block(loc, e),
         }
     }
 }

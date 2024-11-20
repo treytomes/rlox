@@ -22,8 +22,8 @@ impl TokenStream {
         self.tokens.get(self.index - 1)
     }
 
-    pub fn peek(&mut self) -> Option<&Token> {
-        self.skip_space();
+    pub fn peek(&self) -> Option<&Token> {
+        // self.skip_space();
         self.tokens.get(self.index)
     }
 
@@ -31,14 +31,21 @@ impl TokenStream {
         if self.is_at_end() {
             return None;
         }
-        self.skip_space();
+        // self.skip_space();
         let token = self.tokens.get(self.index);
         self.index += 1;
         token
     }
 
     pub fn is_at_end(&self) -> bool {
-        self.index >= self.tokens.len()
+        if self.index >= self.tokens.len() {
+            return true;
+        } else if let Some(token) = self.peek() {
+            if token.token_type == TokenType::EOF {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -58,23 +65,23 @@ impl TokenStream {
     /**
      * Skip any tokens that don't provide value to the output expression.
      */
-    fn skip_space(&mut self) {
-        self.skip_tokens(vec![
-            TokenType::Whitespace,
-            TokenType::NewLine,
-            TokenType::Comment,
-        ]);
-    }
+    // fn skip_space(&mut self) {
+    //     self.skip_tokens(vec![
+    //         TokenType::Whitespace,
+    //         TokenType::NewLine,
+    //         TokenType::Comment,
+    //     ]);
+    // }
 
-    fn skip_tokens(&mut self, token_types: Vec<TokenType>) {
-        while let Some(token) = self.tokens.get(self.index) {
-            if token_types.contains(&token.token_type) {
-                self.index += 1
-            } else {
-                break;
-            }
-        }
-    }
+    // fn skip_tokens(&mut self, token_types: Vec<TokenType>) {
+    //     while let Some(token) = self.tokens.get(self.index) {
+    //         if token_types.contains(&token.token_type) {
+    //             self.index += 1
+    //         } else {
+    //             break;
+    //         }
+    //     }
+    // }
 
     // pub fn consume(&mut self, token_type: TokenType) -> Result<Token, ParserError> {
     //     if let Some(token) = self.next() {

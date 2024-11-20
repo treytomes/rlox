@@ -1,4 +1,3 @@
-mod ast_printer;
 mod binary_op;
 mod expr;
 mod parser;
@@ -7,7 +6,6 @@ mod token_stream;
 mod unary_op;
 mod visitor;
 
-pub use ast_printer::AstPrinter;
 pub use binary_op::BinaryOp;
 pub use expr::Expr;
 pub use parser::parse;

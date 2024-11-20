@@ -1,8 +1,10 @@
+mod ast_printer;
 mod error_set;
 mod file_location;
 mod has_file_location;
 mod locatable_error;
 
+pub use ast_printer::AstPrinter;
 pub use error_set::ErrorSet;
 pub use file_location::FileLocation;
 pub use has_file_location::HasFileLocation;

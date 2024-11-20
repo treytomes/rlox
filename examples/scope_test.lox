@@ -1,0 +1,18 @@
+let a=10;
+print "0 a=" + a + "\r\n";
+
+{
+    print "1 a=" + a + "\r\n";
+    let a = 15;
+
+    print "2 a=" + a + "\r\n";
+    print "leaving scope\r\n";
+}
+
+print "left scope\r\n";
+print "3 a=" + a + "\r\n";
+
+print "end\r\n";
+
+"done"
+
