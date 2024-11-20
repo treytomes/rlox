@@ -2,11 +2,13 @@ use crate::debug::HasFileLocation;
 
 use super::{BinaryOp, Expr, UnaryOp, Visitor};
 
-pub struct AstPrinter;
+pub struct AstPrinter {
+    indent_level: usize,
+}
 
 impl AstPrinter {
     pub fn new() -> Self {
-        AstPrinter {}
+        Self { indent_level: 0 }
     }
 
     pub fn print(&mut self, expr: &Expr) -> String {
@@ -20,7 +22,13 @@ impl Visitor<String> for AstPrinter {
     }
 
     fn visit_string(&mut self, _loc: &dyn HasFileLocation, s: &String) -> String {
-        s.clone()
+        format!(
+            "\"{}\"",
+            s.clone()
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+                .replace("\t", "\\t")
+        )
     }
 
     fn visit_boolean(&mut self, _loc: &dyn HasFileLocation, b: &bool) -> String {
@@ -94,19 +102,45 @@ impl Visitor<String> for AstPrinter {
         format!("(= {} {})", name, expr.accept(self))
     }
 
+    fn visit_variable(&mut self, _loc: &dyn HasFileLocation, name: &String) -> String {
+        format!("(var {})", name)
+    }
+
     fn visit_program(&mut self, _loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> String {
         let mut s = String::new();
         s.push_str("(program \r\n");
+        self.indent_level += 1;
         for expr in exprs {
-            s.push_str("\t");
+            for _ in 0..self.indent_level {
+                s.push_str("\t");
+            }
             s.push_str(&expr.accept(self));
             s.push_str("\r\n");
+        }
+        self.indent_level -= 1;
+        for _ in 0..self.indent_level {
+            s.push_str("\t");
         }
         s.push_str(")");
         s
     }
 
-    fn visit_variable(&mut self, _loc: &dyn HasFileLocation, name: &String) -> String {
-        format!("(var {})", name)
+    fn visit_block(&mut self, _loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> String {
+        let mut s = String::new();
+        s.push_str("(block \r\n");
+        self.indent_level += 1;
+        for expr in exprs {
+            for _ in 0..self.indent_level {
+                s.push_str("\t");
+            }
+            s.push_str(&expr.accept(self));
+            s.push_str("\r\n");
+        }
+        self.indent_level -= 1;
+        for _ in 0..self.indent_level {
+            s.push_str("\t");
+        }
+        s.push_str(")");
+        s
     }
 }
