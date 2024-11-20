@@ -1,5 +1,9 @@
 use super::{LexerError, Literal, Token, TokenType};
 
+const TOKENIZE_COMMENTS: bool = false;
+const TOKENIZE_NEWLINE: bool = false;
+const TOKENIZE_SPACE: bool = false;
+
 struct Scanner {
     source: String,
     start: usize,
@@ -25,7 +29,14 @@ impl Scanner {
             current: 0,
             line: 1,
             column: 0,
-            tokens: Vec::new(),
+            tokens: Vec::new(), // let value = &self.source[self.start..self.current];
+                                // self.tokens.push(Token::new(
+                                //     TokenType::Whitespace,
+                                //     value,
+                                //     Literal::Nil,
+                                //     self.line,
+                                //     self.column,
+                                // ));
         }
     }
 
@@ -133,14 +144,16 @@ impl Scanner {
             }
         }
 
-        let value = &self.source[self.start..self.current];
-        self.tokens.push(Token::new(
-            TokenType::Comment,
-            value,
-            Literal::Nil,
-            self.line,
-            self.column,
-        ));
+        if TOKENIZE_COMMENTS {
+            let value = &self.source[self.start..self.current];
+            self.tokens.push(Token::new(
+                TokenType::Comment,
+                value,
+                Literal::Nil,
+                self.line,
+                self.column,
+            ));
+        }
         Ok(())
     }
 
@@ -149,14 +162,16 @@ impl Scanner {
             self.advance();
         }
 
-        let value = &self.source[self.start..self.current];
-        self.tokens.push(Token::new(
-            TokenType::Comment,
-            value,
-            Literal::Nil,
-            self.line,
-            self.column,
-        ));
+        if TOKENIZE_COMMENTS {
+            let value = &self.source[self.start..self.current];
+            self.tokens.push(Token::new(
+                TokenType::Comment,
+                value,
+                Literal::Nil,
+                self.line,
+                self.column,
+            ));
+        }
         Ok(())
     }
 
@@ -164,22 +179,26 @@ impl Scanner {
         // If peek isn't \n, then the current char should be \n.  The next one might still be \n.
 
         if self.peek() == '\n' {
-            self.tokens.push(Token::new(
-                TokenType::NewLine,
-                "\r\n",
-                Literal::Nil,
-                self.line,
-                self.column,
-            ));
+            if TOKENIZE_NEWLINE {
+                self.tokens.push(Token::new(
+                    TokenType::NewLine,
+                    "\r\n",
+                    Literal::Nil,
+                    self.line,
+                    self.column,
+                ));
+            }
             self.advance();
         } else {
-            self.tokens.push(Token::new(
-                TokenType::NewLine,
-                "\n",
-                Literal::Nil,
-                self.line,
-                self.column,
-            ));
+            if TOKENIZE_NEWLINE {
+                self.tokens.push(Token::new(
+                    TokenType::NewLine,
+                    "\n",
+                    Literal::Nil,
+                    self.line,
+                    self.column,
+                ));
+            }
         }
         self.line += 1;
         self.column = 0;
@@ -191,14 +210,16 @@ impl Scanner {
             self.advance();
         }
 
-        let value = &self.source[self.start..self.current];
-        self.tokens.push(Token::new(
-            TokenType::Whitespace,
-            value,
-            Literal::Nil,
-            self.line,
-            self.column,
-        ));
+        if TOKENIZE_SPACE {
+            let value = &self.source[self.start..self.current];
+            self.tokens.push(Token::new(
+                TokenType::Whitespace,
+                value,
+                Literal::Nil,
+                self.line,
+                self.column,
+            ));
+        }
         Ok(())
     }
 
