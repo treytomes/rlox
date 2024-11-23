@@ -21,7 +21,6 @@ pub enum TokenType {
     Semicolon,
     Slash,
     Star,
-    QuestionMark,
     Colon,
 
     // One or two character tokens.
@@ -33,6 +32,8 @@ pub enum TokenType {
     GreaterEqual,
     Less,
     LessEqual,
+    QuestionMark,
+    DoubleQuestionMark,
 
     // Literals.
     Identifier,
@@ -78,6 +79,7 @@ impl Display for TokenType {
             TokenType::Slash => "Slash",
             TokenType::Star => "Star",
             TokenType::QuestionMark => "QuestionMark",
+            TokenType::DoubleQuestionMark => "DoubleQuestionMark",
             TokenType::Colon => "Colon",
             TokenType::Bang => "Bang",
             TokenType::BangEqual => "BangEqual",

@@ -116,6 +116,15 @@ fn parse_stmt_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             None
         };
         return Ok(Expr::if_stmt(&loc, expr, then_branch, else_branch));
+    } else if stream.match_token(vec![TokenType::DoubleQuestionMark]) {
+        // Implement the null-coalescing operator.
+        let loc = FileLocation::from_loc(stream.peek().unwrap());
+        let if_nil = parse_stmt(stream)?;
+
+        let null_check = Expr::binary_op(&loc, expr.clone(), BinaryOp::Eq, Expr::nil(&loc));
+
+        // If <expr> then <expr> else <if_false>
+        return Ok(Expr::if_stmt(&loc, null_check, if_nil, Some(expr)));
     }
 
     Ok(expr)

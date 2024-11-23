@@ -4,6 +4,7 @@ use crate::lexer::{Token, TokenType};
 
 use super::ParserError;
 
+#[derive(Debug, Copy, Clone)]
 pub enum BinaryOp {
     Add,
     Sub,

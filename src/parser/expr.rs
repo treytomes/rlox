@@ -5,6 +5,7 @@ use crate::{
 
 use super::{BinaryOp, UnaryOp, Visitor};
 
+#[derive(Debug, Clone)]
 pub enum Expr {
     Number(FileLocation, f64),
     String(FileLocation, String),
