@@ -39,6 +39,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - The parenthesis around the condition are not necessary, though due to how expressions are formed you can add them if you really want to.
 - They will return the value of the "then" clause if the condition if truthy, otherwise it will return the value of the "else" clause.
     - If no "else" clause is provided in a falsy state, it will return `nil`.
+- The ternary operator (?:) available, and desugared into an if-expression at compile time.
 
 ## TODO
 

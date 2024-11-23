@@ -106,6 +106,18 @@ fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
 fn parse_stmt_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let expr = parse_expr(stream)?;
+
+    if stream.match_token(vec![TokenType::QuestionMark]) {
+        let loc = FileLocation::from_loc(stream.peek().unwrap());
+        let then_branch = parse_stmt(stream)?;
+        let else_branch = if stream.match_token(vec![TokenType::Colon]) {
+            Some(parse_stmt(stream)?)
+        } else {
+            None
+        };
+        return Ok(Expr::if_stmt(&loc, expr, then_branch, else_branch));
+    }
+
     Ok(expr)
 }
 

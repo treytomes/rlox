@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::lexer::token;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TokenType {
     // These are not tokens, but we need to track them for error reporting.
@@ -19,6 +21,8 @@ pub enum TokenType {
     Semicolon,
     Slash,
     Star,
+    QuestionMark,
+    Colon,
 
     // One or two character tokens.
     Bang,
@@ -73,6 +77,8 @@ impl Display for TokenType {
             TokenType::Semicolon => "Semicolon",
             TokenType::Slash => "Slash",
             TokenType::Star => "Star",
+            TokenType::QuestionMark => "QuestionMark",
+            TokenType::Colon => "Colon",
             TokenType::Bang => "Bang",
             TokenType::BangEqual => "BangEqual",
             TokenType::Equal => "Equal",
