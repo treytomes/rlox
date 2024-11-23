@@ -160,4 +160,13 @@ impl Visitor<String> for AstPrinter {
         s.push_str(")");
         s
     }
+
+    fn visit_while(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        cond: &Box<Expr>,
+        body: &Box<Expr>,
+    ) -> String {
+        format!("(while {} {})", cond.accept(self), body.accept(self))
+    }
 }

@@ -4,6 +4,7 @@
         "desugared",
         "Equalness",
         "fract",
+        "ition",
         "rlox",
         "SIGTSTP",
         "termion"

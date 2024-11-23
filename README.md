@@ -33,6 +33,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - You can also do this to print and assign `b` at the same time: `print b=10`.
     - You cannot similarly cascade the `let` statement at this time.
 - The result of the most recent statement will be stored in the `_` variable.
+- Loops will return the final result of their final iteration.
 
 ### If Expressions
 
@@ -46,10 +47,6 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 
 - Implement bitwise and/or operators.
     - Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, error if not integer and use bitwise ops.
-- Implement the ternary operator.
-    - I expect this will be above the precedence of equality.
-    - If the if-statement is an if-expression, is this really necessary?
-    - I do like a bit of syntactic sugar.
 - A program is essentially a block.  Refactor this later.
 - Test synchronization and the ErrorSet.
     - Parsing should continue after an error is found, then a list of errors should be returned to the user.
@@ -89,4 +86,4 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - An `if` expression should return whichever side evaluates to true.  What should a loop return?  Let's say that it returns the value of the final expression evaluated in it's block and see how it goes.
     - If that doesn't work I can always have it return `nil`.
 - Should I allow any arbitrary statement in the condition of an `if` or `while`?  Or `print`?  It would make the language more flexible, but might also lead to needless chaos.  Not doing it feels inconsistent with the "everything is an expression" thing though.
-
+- So I implemented by the if- and ternary-expressions.  They are roughly equivalent in every way; the difference being the order of operators and verbosity.

@@ -317,4 +317,21 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         self.environments.leave_scope(loc)?;
         Ok(last)
     }
+
+    fn visit_while(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        cond: &Box<Expr>,
+        body: &Box<Expr>,
+    ) -> Result<Object, RuntimeError> {
+        let mut last = Object::Nil;
+        // The `cond`-ition needs to be re-accepted / re-evaluated at the end of each iteration.
+        while cond.accept(self)?.is_truthy() {
+            last = body.accept(self)?;
+            self.store_result(loc, last.clone())?;
+        }
+
+        // Return the final result.
+        Ok(last)
+    }
 }
