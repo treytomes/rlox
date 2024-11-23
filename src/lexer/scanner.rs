@@ -68,8 +68,15 @@ impl Scanner {
             '+' => Ok(self.add_token(TokenType::Plus)),
             ';' => Ok(self.add_token(TokenType::Semicolon)),
             '*' => Ok(self.add_token(TokenType::Star)),
-            '?' => Ok(self.add_token(TokenType::QuestionMark)),
             ':' => Ok(self.add_token(TokenType::Colon)),
+            '?' => {
+                let token_type = if self.match_next('?') {
+                    TokenType::DoubleQuestionMark
+                } else {
+                    TokenType::QuestionMark
+                };
+                Ok(self.add_token(token_type))
+            }
             '!' => {
                 let token_type = if self.match_next('=') {
                     TokenType::BangEqual
@@ -334,6 +341,15 @@ impl Scanner {
                     TokenType::False,
                     "false",
                     Literal::Boolean(false),
+                    self.line,
+                    self.column,
+                ));
+            }
+            TokenType::Nil => {
+                self.tokens.push(Token::new(
+                    TokenType::Nil,
+                    "nil",
+                    Literal::Nil,
                     self.line,
                     self.column,
                 ));
