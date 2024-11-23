@@ -237,6 +237,23 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         Ok(Object::Nil)
     }
 
+    fn visit_if(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        cond: &Box<Expr>,
+        then: &Box<Expr>,
+        else_: &Option<Box<Expr>>,
+    ) -> Result<Object, RuntimeError> {
+        let cond = cond.accept(self)?;
+        if cond.is_truthy() {
+            then.accept(self)
+        } else if let Some(else_) = else_ {
+            else_.accept(self)
+        } else {
+            Ok(Object::Nil)
+        }
+    }
+
     fn visit_let(
         &mut self,
         loc: &dyn HasFileLocation,

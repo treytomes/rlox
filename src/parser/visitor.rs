@@ -17,6 +17,13 @@ pub trait Visitor<R> {
         e2: &Box<Expr>,
     ) -> R;
     fn visit_print(&mut self, loc: &dyn HasFileLocation, expr: &Box<Expr>) -> R;
+    fn visit_if(
+        &mut self,
+        loc: &dyn HasFileLocation,
+        cond: &Box<Expr>,
+        then: &Box<Expr>,
+        else_: &Option<Box<Expr>>,
+    ) -> R;
     fn visit_let(&mut self, loc: &dyn HasFileLocation, name: &String) -> R;
     fn visit_let_init(&mut self, loc: &dyn HasFileLocation, name: &String, expr: &Box<Expr>) -> R;
     fn visit_assign(&mut self, loc: &dyn HasFileLocation, name: &String, expr: &Box<Expr>) -> R;

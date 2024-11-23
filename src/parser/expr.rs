@@ -16,7 +16,9 @@ pub enum Expr {
     BinaryOp(FileLocation, Box<Expr>, BinaryOp, Box<Expr>),
 
     Print(FileLocation, Box<Expr>),
+    If(FileLocation, Box<Expr>, Box<Expr>, Option<Box<Expr>>),
     Program(FileLocation, Box<Vec<Expr>>),
+    // TODO: Not sure that Let and LetInit need to be separate entities.
     Let(FileLocation, String),
     LetInit(FileLocation, String, Box<Expr>),
     Assign(FileLocation, String, Box<Expr>),
@@ -70,6 +72,28 @@ impl Expr {
         Self::Print(FileLocation::from_loc(loc), Box::new(e))
     }
 
+    pub fn if_stmt(
+        loc: &dyn HasFileLocation,
+        condition: Expr,
+        then: Expr,
+        else_: Option<Expr>,
+    ) -> Self {
+        match else_ {
+            Some(e) => Self::If(
+                FileLocation::from_loc(loc),
+                Box::new(condition),
+                Box::new(then),
+                Some(Box::new(e)),
+            ),
+            None => Self::If(
+                FileLocation::from_loc(loc),
+                Box::new(condition),
+                Box::new(then),
+                None,
+            ),
+        }
+    }
+
     pub fn let_stmt(loc: &dyn HasFileLocation, name: String, e: Option<Expr>) -> Self {
         match e {
             Some(e) => Self::LetInit(FileLocation::from_loc(loc), name, Box::new(e)),
@@ -99,6 +123,7 @@ impl Expr {
             Self::UnaryOp(loc, op, e) => visitor.visit_unary_op(loc, op, e),
             Self::BinaryOp(loc, op, e1, e2) => visitor.visit_binary_op(loc, e1, op, e2),
             Self::Print(loc, e) => visitor.visit_print(loc, e),
+            Self::If(loc, c, t, e) => visitor.visit_if(loc, c, t, e),
             Self::Let(loc, name) => visitor.visit_let(loc, name),
             Self::LetInit(loc, name, e) => visitor.visit_let_init(loc, name, e),
             Self::Assign(loc, name, e) => visitor.visit_assign(loc, name, e),

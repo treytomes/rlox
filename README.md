@@ -2,9 +2,15 @@
 
 A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftinginterpreters.com/) implemented in Rust.
 
+## Features
+
+- Explicit variable declaration.
+- Everything is an expression.
+
 ## Deviations
 *Things I implemented that don't necessarily fit the vanilla language spec.*
 
+- Variables initialize to `nil` if you do not provide a value.
 - Error reports will show the line that produced the error with an indicator for which character caused the problem.
     - I'm expecting this to give me trouble when I get to using a VM to execute the code.
 - Dividing by 0 yields the `NaN` literal, which is definitely not a number.
@@ -18,7 +24,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Equalness:
     - NaN is not equal to anything.
 - The result of the last expression will be automatically returned to the user.
-- The last statement need not end with a semicolon.
+- The last statement in any block (or program) need not end with a semicolon.
 - String escape sequences for: \n, \r, \t, \", \\
 - Variable declarations are allowed anywhere, just like any other statement.
 - Expressions can be delimited by commas, which incidentally causes them to function just like semicolons.
@@ -27,6 +33,12 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - You can also do this to print and assign `b` at the same time: `print b=10`.
     - You cannot similarly cascade the `let` statement at this time.
 - The result of the most recent statement will be stored in the `_` variable.
+
+### If Expressions
+
+- The parenthesis around the condition are not necessary, though due to how expressions are formed you can add them if you really want to.
+- They will return the value of the "then" clause if the condition if truthy, otherwise it will return the value of the "else" clause.
+    - If no "else" clause is provided in a falsy state, it will return `nil`.
 
 ## TODO
 
@@ -72,3 +84,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Should I create a `del` to remove variables?
 - Do I want to allow function arguments to be separated by semicolons?  It feels weird, but is also internally consistent?
   Mostly it just feels weird.
+- An `if` expression should return whichever side evaluates to true.  What should a loop return?  Let's say that it returns the value of the final expression evaluated in it's block and see how it goes.
+    - If that doesn't work I can always have it return `nil`.
+- Should I allow any arbitrary statement in the condition of an `if` or `while`?  Or `print`?  It would make the language more flexible, but might also lead to needless chaos.  Not doing it feels inconsistent with the "everything is an expression" thing though.
+

@@ -79,6 +79,24 @@ impl Visitor<String> for AstPrinter {
         format!("(print {})", expr.accept(self))
     }
 
+    fn visit_if(
+        &mut self,
+        _loc: &dyn HasFileLocation,
+        cond: &Box<Expr>,
+        then: &Box<Expr>,
+        else_: &Option<Box<Expr>>,
+    ) -> String {
+        match else_ {
+            Some(else_) => format!(
+                "(if {} {} {})",
+                cond.accept(self),
+                then.accept(self),
+                else_.accept(self)
+            ),
+            None => format!("(if {} {})", cond.accept(self), then.accept(self)),
+        }
+    }
+
     fn visit_let(&mut self, _loc: &dyn HasFileLocation, name: &String) -> String {
         format!("(let {})", name)
     }

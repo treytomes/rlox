@@ -6,6 +6,8 @@
  *                | printStmt ;
  * letStmt        → "let" IDENTIFIER ( "=" expression )? ";" ;
  * printStmt      → "print" expression ";" ;
+ * ifStmt         → "if" "(" expression ")" statement
+ *                  ( "else" statement )? ;
  * exprStmt       → expression ";" ;
  * expression     → equality ;
  * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -87,6 +89,7 @@ fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     if let Some(token) = stream.peek() {
         match token.token_type {
             TokenType::Print => parse_stmt_print(stream),
+            TokenType::If => parse_stmt_if(stream),
             TokenType::Let => parse_stmt_let(stream),
             TokenType::LeftBrace => parse_stmt_block(stream),
             _ => parse_stmt_expr(stream),
@@ -123,6 +126,21 @@ fn parse_stmt_print(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     stream.consume(vec![TokenType::Print])?;
     let expr = parse_expr(stream)?;
     Ok(Expr::print(&loc, expr))
+}
+
+fn parse_stmt_if(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    stream.consume(vec![TokenType::If])?;
+    // stream.consume(vec![TokenType::LeftParen])?;
+    let condition = parse_expr(stream)?;
+    // stream.consume(vec![TokenType::RightParen])?;
+    let then_branch = parse_stmt(stream)?;
+    let else_branch = if stream.match_token(vec![TokenType::Else]) {
+        Some(parse_stmt(stream)?)
+    } else {
+        None
+    };
+    Ok(Expr::if_stmt(&loc, condition, then_branch, else_branch))
 }
 
 fn parse_stmt_block(stream: &mut TokenStream) -> Result<Expr, ParserError> {
