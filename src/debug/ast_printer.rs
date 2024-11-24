@@ -72,6 +72,8 @@ impl Visitor<String> for AstPrinter {
             BinaryOp::Le => format!("(<= {} {})", e1.accept(self), e2.accept(self)),
             BinaryOp::Gt => format!("(> {} {})", e1.accept(self), e2.accept(self)),
             BinaryOp::Ge => format!("(>= {} {})", e1.accept(self), e2.accept(self)),
+            BinaryOp::LogicalAnd => format!("(&& {} {})", e1.accept(self), e2.accept(self)),
+            BinaryOp::LogicalOr => format!("(|| {} {})", e1.accept(self), e2.accept(self)),
         }
     }
 
@@ -103,6 +105,8 @@ impl Visitor<String> for AstPrinter {
 
     fn visit_let_init(
         &mut self,
+        // And,
+        // Or,
         _loc: &dyn HasFileLocation,
         name: &String,
         expr: &Box<Expr>,

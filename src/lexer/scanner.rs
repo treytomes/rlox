@@ -118,6 +118,22 @@ impl Scanner {
                     Ok(self.add_token(TokenType::Slash))
                 }
             }
+            '&' => {
+                let token_type = if self.match_next('&') {
+                    TokenType::LogicalAnd
+                } else {
+                    TokenType::BitwiseAnd
+                };
+                Ok(self.add_token(token_type))
+            }
+            '|' => {
+                let token_type = if self.match_next('|') {
+                    TokenType::LogicalOr
+                } else {
+                    TokenType::BitwiseOr
+                };
+                Ok(self.add_token(token_type))
+            }
             '"' => self.string(),
             '0'..='9' => self.number(),
             'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
@@ -307,7 +323,6 @@ impl Scanner {
 
         let text = &self.source[self.start..self.current];
         let token_type = match text {
-            "and" => TokenType::And,
             "class" => TokenType::Class,
             "else" => TokenType::Else,
             "false" => TokenType::False,
@@ -315,7 +330,6 @@ impl Scanner {
             "fun" => TokenType::Fun,
             "if" => TokenType::If,
             "nil" => TokenType::Nil,
-            "or" => TokenType::Or,
             "print" => TokenType::Print,
             "return" => TokenType::Return,
             "super" => TokenType::Super,

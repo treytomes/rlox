@@ -104,6 +104,23 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         e2: &Box<Expr>,
     ) -> Result<Object, RuntimeError> {
         let left = e1.accept(self)?;
+
+        match op {
+            BinaryOp::LogicalAnd => {
+                if !left.is_truthy() {
+                    return Ok(left);
+                }
+                return Ok(e2.accept(self)?);
+            }
+            BinaryOp::LogicalOr => {
+                if left.is_truthy() {
+                    return Ok(left);
+                }
+                return Ok(e2.accept(self)?);
+            }
+            _ => {}
+        }
+
         let right = e2.accept(self)?;
 
         match op {
@@ -224,6 +241,11 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
                     ))
                 }
             }
+            _ => Err(RuntimeError::new(
+                "binary operation expected",
+                loc.get_line(),
+                loc.get_column(),
+            )),
         }
     }
 

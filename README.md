@@ -43,12 +43,8 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - The ternary operator (?:) available, and desugared into an if-expression at compile time.
 - The null-coalescing operator (??) is similarly desugared into an if-expression.
 
-
-
 ## TODO
 
-- Implement bitwise and/or operators.
-    - Replace ! / && / || with not/and/or.  Use boolean operations with true/false.  With numbers, error if not integer and use bitwise ops.
 - A program is essentially a block.  Refactor this later.
 - Test synchronization and the ErrorSet.
     - Parsing should continue after an error is found, then a list of errors should be returned to the user.
@@ -127,3 +123,15 @@ for x=0 to 10 step 1 {
 I don't really like the BASIC style though.  And Python's syntax requires the `range` operation.
 
 I think I'm just going to stick with the C-syntax for now.  The parentheses will hold the initializer, condition, and increment statements.
+
+### Boolean / Bitwise Operators
+
+The problem here is one of intention: Am I trying to calculate something, or make a decision?
+Boolean operators can and should short-circuit; bitwise cannot.
+Because these operations are so different, they need to have different operator symbols.
+...and sticking with the C-syntax is the easiest way to not confuse myself.
+
+- Bitwise operators: Runtime error if either operand is not an integer.
+
+- I'd like to be able to do something like this: `true && print "A"`, but that would mean having boolean operators between statements and I'm not
+    sure what the consequences of that would be just yet.

@@ -34,6 +34,10 @@ pub enum TokenType {
     LessEqual,
     QuestionMark,
     DoubleQuestionMark,
+    LogicalAnd,
+    BitwiseAnd,
+    LogicalOr,
+    BitwiseOr,
 
     // Literals.
     Identifier,
@@ -41,7 +45,6 @@ pub enum TokenType {
     Number,
 
     // Keywords.
-    And,
     Class,
     Else,
     False,
@@ -49,7 +52,6 @@ pub enum TokenType {
     For,
     If,
     Nil,
-    Or,
     Print,
     Return,
     Super,
@@ -92,7 +94,10 @@ impl Display for TokenType {
             TokenType::Identifier => "Identifier",
             TokenType::String => "String",
             TokenType::Number => "Number",
-            TokenType::And => "And",
+            TokenType::LogicalAnd => "LogicalAnd",
+            TokenType::BitwiseAnd => "BitwiseAnd",
+            TokenType::LogicalOr => "LogicalOr",
+            TokenType::BitwiseOr => "BitwiseOr",
             TokenType::Class => "Class",
             TokenType::Else => "Else",
             TokenType::False => "False",
@@ -100,7 +105,6 @@ impl Display for TokenType {
             TokenType::For => "For",
             TokenType::If => "If",
             TokenType::Nil => "Nil",
-            TokenType::Or => "Or",
             TokenType::Print => "Print",
             TokenType::Return => "Return",
             TokenType::Super => "Super",

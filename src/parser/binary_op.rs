@@ -1,4 +1,7 @@
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::{Binary, Display},
+    str::FromStr,
+};
 
 use crate::lexer::{Token, TokenType};
 
@@ -16,8 +19,8 @@ pub enum BinaryOp {
     Le,
     Gt,
     Ge,
-    // And,
-    // Or,
+    LogicalAnd,
+    LogicalOr,
 }
 
 impl BinaryOp {
@@ -33,6 +36,8 @@ impl BinaryOp {
             TokenType::LessEqual => Ok(BinaryOp::Le),
             TokenType::Greater => Ok(BinaryOp::Gt),
             TokenType::GreaterEqual => Ok(BinaryOp::Ge),
+            TokenType::LogicalAnd => Ok(BinaryOp::LogicalAnd),
+            TokenType::LogicalOr => Ok(BinaryOp::LogicalOr),
             _ => Err(ParserError::unexpected_token(token)),
         }
     }
@@ -51,6 +56,8 @@ impl Display for BinaryOp {
             BinaryOp::Le => write!(f, "<="),
             BinaryOp::Gt => write!(f, ">"),
             BinaryOp::Ge => write!(f, ">="),
+            BinaryOp::LogicalAnd => write!(f, "&&"),
+            BinaryOp::LogicalOr => write!(f, "||"),
         }
     }
 }
@@ -70,6 +77,8 @@ impl FromStr for BinaryOp {
             "<=" => Ok(BinaryOp::Le),
             ">" => Ok(BinaryOp::Gt),
             ">=" => Ok(BinaryOp::Ge),
+            "&&" => Ok(BinaryOp::LogicalAnd),
+            "||" => Ok(BinaryOp::LogicalOr),
             _ => Err(ParserError::invalid_op(s)),
         }
     }

@@ -279,7 +279,7 @@ fn parse_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 
 fn parse_assignment(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let loc = FileLocation::from_loc(stream.peek().unwrap());
-    let expr = parse_equality(stream)?;
+    let expr = parse_logical_or(stream)?;
     if stream.match_token(vec![TokenType::Equal]) {
         let value = parse_assignment(stream)?;
         match expr {
@@ -293,6 +293,32 @@ fn parse_assignment(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     } else {
         Ok(expr)
     }
+}
+
+fn parse_logical_or(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let mut expr = parse_logical_and(stream)?;
+
+    while stream.match_token(vec![TokenType::LogicalOr]) {
+        let loc = FileLocation::from_loc(stream.peek().unwrap());
+        let operator = BinaryOp::from_token(stream.prev().unwrap())?;
+        let right = parse_logical_and(stream)?;
+        expr = Expr::binary_op(&loc, expr, operator, right);
+    }
+
+    Ok(expr)
+}
+
+fn parse_logical_and(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let mut expr = parse_equality(stream)?;
+
+    while stream.match_token(vec![TokenType::LogicalAnd]) {
+        let loc = FileLocation::from_loc(stream.peek().unwrap());
+        let operator = BinaryOp::from_token(stream.prev().unwrap())?;
+        let right = parse_equality(stream)?;
+        expr = Expr::binary_op(&loc, expr, operator, right);
+    }
+
+    Ok(expr)
 }
 
 fn parse_equality(stream: &mut TokenStream) -> Result<Expr, ParserError> {
