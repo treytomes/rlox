@@ -43,6 +43,8 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - The ternary operator (?:) available, and desugared into an if-expression at compile time.
 - The null-coalescing operator (??) is similarly desugared into an if-expression.
 
+
+
 ## TODO
 
 - Implement bitwise and/or operators.
@@ -51,6 +53,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
 - Test synchronization and the ErrorSet.
     - Parsing should continue after an error is found, then a list of errors should be returned to the user.
     - The error indicators are lining up correctly right now?
+- Tail Call Optimization
 
 ## Musings
 
@@ -87,3 +90,40 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - If that doesn't work I can always have it return `nil`.
 - Should I allow any arbitrary statement in the condition of an `if` or `while`?  Or `print`?  It would make the language more flexible, but might also lead to needless chaos.  Not doing it feels inconsistent with the "everything is an expression" thing though.
 - So I implemented by the if- and ternary-expressions.  They are roughly equivalent in every way; the difference being the order of operators and verbosity.
+
+### For Expressions
+
+- The parentheses are required around the condition, at least for now.  It's just looks too weird to leave it out:
+
+```lox
+for (let x=0; x<10; x+=1) {
+    print x;
+    x
+}
+```
+
+The final result of th expression is `10`.
+
+Would it be more consistent with the language to use commas here?
+
+```lox
+for (let x=0, x<10, x+=1) {
+    print x;
+    x
+}
+```
+
+Then the syntax looks more like a function call.  But I hate it.  So what then?
+
+They decompose to while loops.  That's something at least.
+
+```lox
+for x=0 to 10 step 1 {
+    print x;
+    x
+}
+```
+
+I don't really like the BASIC style though.  And Python's syntax requires the `range` operation.
+
+I think I'm just going to stick with the C-syntax for now.  The parentheses will hold the initializer, condition, and increment statements.

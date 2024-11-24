@@ -93,6 +93,7 @@ fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             TokenType::Let => parse_stmt_let(stream),
             TokenType::LeftBrace => parse_stmt_block(stream),
             TokenType::While => parse_stmt_while(stream),
+            TokenType::For => parse_stmt_for(stream),
             _ => parse_stmt_expr(stream),
         }
     } else {
@@ -218,6 +219,58 @@ fn parse_stmt_while(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     let condition = parse_expr(stream)?;
     let body = parse_stmt(stream)?;
     Ok(Expr::while_stmt(&loc, condition, body))
+}
+
+fn parse_stmt_for(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    stream.consume(vec![TokenType::For])?;
+    stream.consume(vec![TokenType::LeftParen])?;
+
+    let initializer = if stream.match_token(vec![TokenType::Semicolon]) {
+        None
+    } else if let Some(token) = stream.peek() {
+        if token.token_type == TokenType::Let {
+            Some(parse_stmt_let(stream)?)
+        } else {
+            Some(parse_stmt_expr(stream)?)
+        }
+    } else {
+        return Err(ParserError::new(
+            "expected initializer",
+            loc.get_line(),
+            loc.get_column(),
+        ));
+    };
+    if initializer.is_some() {
+        stream.consume(vec![TokenType::Semicolon])?;
+    }
+
+    let condition = if stream.match_token(vec![TokenType::Semicolon]) {
+        Expr::boolean(&loc, true)
+    } else {
+        let e = parse_expr(stream)?;
+        stream.consume(vec![TokenType::Semicolon])?;
+        e
+    };
+
+    let increment = if stream.match_token(vec![TokenType::RightParen]) {
+        None
+    } else {
+        Some(parse_expr(stream)?)
+    };
+
+    stream.consume(vec![TokenType::RightParen])?;
+    let mut body = parse_stmt(stream)?;
+    if let Some(increment) = increment {
+        body = Expr::block(&loc, vec![body, increment]);
+    }
+
+    body = Expr::while_stmt(&loc, condition, body);
+    if let Some(initializer) = initializer {
+        Ok(Expr::block(&loc, vec![initializer, body]))
+    } else {
+        Ok(body)
+    }
 }
 
 fn parse_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {
@@ -369,21 +422,23 @@ fn parse_primary(stream: &mut TokenStream) -> Result<Expr, ParserError> {
 fn synchronize(stream: &mut TokenStream) {
     stream.next();
 
-    while let Some(token) = stream.peek() {
-        if vec![TokenType::Comma, TokenType::Semicolon].contains(&token.token_type) {
-            return;
-        }
+    while !stream.is_at_end() {
+        if let Some(token) = stream.peek() {
+            if vec![TokenType::Comma, TokenType::Semicolon].contains(&token.token_type) {
+                return;
+            }
 
-        match token.token_type {
-            TokenType::Class
-            | TokenType::Fun
-            | TokenType::Let
-            | TokenType::For
-            | TokenType::If
-            | TokenType::While
-            | TokenType::Print
-            | TokenType::Return => return,
-            _ => {}
+            match token.token_type {
+                TokenType::Class
+                | TokenType::Fun
+                | TokenType::Let
+                | TokenType::For
+                | TokenType::If
+                | TokenType::While
+                | TokenType::Print
+                | TokenType::Return => return,
+                _ => {}
+            }
         }
 
         stream.next();
