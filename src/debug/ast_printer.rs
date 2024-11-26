@@ -173,4 +173,12 @@ impl Visitor<String> for AstPrinter {
     ) -> String {
         format!("(while {} {})", cond.accept(self), body.accept(self))
     }
+
+    fn visit_break(&mut self, _loc: &dyn HasFileLocation) -> String {
+        "(break)".to_string()
+    }
+
+    fn visit_continue(&mut self, _loc: &dyn HasFileLocation) -> String {
+        "(continue)".to_string()
+    }
 }

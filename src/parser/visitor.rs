@@ -31,4 +31,6 @@ pub trait Visitor<R> {
     fn visit_program(&mut self, loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> R;
     fn visit_block(&mut self, loc: &dyn HasFileLocation, exprs: &Vec<Expr>) -> R;
     fn visit_while(&mut self, loc: &dyn HasFileLocation, cond: &Box<Expr>, body: &Box<Expr>) -> R;
+    fn visit_break(&mut self, loc: &dyn HasFileLocation) -> R;
+    fn visit_continue(&mut self, loc: &dyn HasFileLocation) -> R;
 }

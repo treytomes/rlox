@@ -3,7 +3,7 @@ use crate::{
     parser::{BinaryOp, Expr, UnaryOp, Visitor},
 };
 
-use super::{EnvironmentStack, Object, RuntimeError};
+use super::{runtime_error::Interrupt, EnvironmentStack, Object, RuntimeError};
 
 pub struct Interpreter {
     environments: EnvironmentStack,
@@ -349,11 +349,32 @@ impl Visitor<Result<Object, RuntimeError>> for Interpreter {
         let mut last = Object::Nil;
         // The `cond`-ition needs to be re-accepted / re-evaluated at the end of each iteration.
         while cond.accept(self)?.is_truthy() {
-            last = body.accept(self)?;
+            match body.accept(self) {
+                Ok(value) => last = value,
+                Err(e) => {
+                    if let Some(int) = e.interrupt {
+                        match int {
+                            Interrupt::Break => break,
+                            Interrupt::Continue => continue,
+                        }
+                    } else {
+                        return Err(e);
+                    }
+                }
+            }
+
             self.store_result(loc, last.clone())?;
         }
 
         // Return the final result.
         Ok(last)
+    }
+
+    fn visit_break(&mut self, loc: &dyn HasFileLocation) -> Result<Object, RuntimeError> {
+        Err(RuntimeError::break_loop())
+    }
+
+    fn visit_continue(&mut self, loc: &dyn HasFileLocation) -> Result<Object, RuntimeError> {
+        Err(RuntimeError::continue_loop())
     }
 }

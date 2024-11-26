@@ -94,6 +94,8 @@ fn parse_stmt(stream: &mut TokenStream) -> Result<Expr, ParserError> {
             TokenType::LeftBrace => parse_stmt_block(stream),
             TokenType::While => parse_stmt_while(stream),
             TokenType::For => parse_stmt_for(stream),
+            TokenType::Break => parse_stmt_break(stream),
+            TokenType::Continue => parse_stmt_continue(stream),
             _ => parse_stmt_expr(stream),
         }
     } else {
@@ -271,6 +273,18 @@ fn parse_stmt_for(stream: &mut TokenStream) -> Result<Expr, ParserError> {
     } else {
         Ok(body)
     }
+}
+
+fn parse_stmt_break(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    stream.consume(vec![TokenType::Break])?;
+    Ok(Expr::break_stmt(&loc))
+}
+
+fn parse_stmt_continue(stream: &mut TokenStream) -> Result<Expr, ParserError> {
+    let loc = FileLocation::from_loc(stream.peek().unwrap());
+    stream.consume(vec![TokenType::Continue])?;
+    Ok(Expr::continue_stmt(&loc))
 }
 
 fn parse_expr(stream: &mut TokenStream) -> Result<Expr, ParserError> {

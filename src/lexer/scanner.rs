@@ -337,6 +337,8 @@ impl Scanner {
             "true" => TokenType::True,
             "let" => TokenType::Let,
             "while" => TokenType::While,
+            "break" => TokenType::Break,
+            "continue" => TokenType::Continue,
             _ => TokenType::Identifier,
         };
 

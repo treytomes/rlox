@@ -59,6 +59,8 @@ pub enum TokenType {
     True,
     Let, // Original spec used "var" here.
     While,
+    Break,
+    Continue,
 
     EOF,
 }
@@ -112,6 +114,8 @@ impl Display for TokenType {
             TokenType::True => "True",
             TokenType::Let => "Let",
             TokenType::While => "While",
+            TokenType::Break => "Break",
+            TokenType::Continue => "Continue",
             TokenType::EOF => "EOF",
         };
         write!(f, "{}", s)

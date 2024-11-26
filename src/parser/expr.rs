@@ -25,6 +25,8 @@ pub enum Expr {
     Assign(FileLocation, String, Box<Expr>),
     Block(FileLocation, Box<Vec<Expr>>),
     While(FileLocation, Box<Expr>, Box<Expr>),
+    Break(FileLocation),
+    Continue(FileLocation),
 }
 
 impl Expr {
@@ -119,6 +121,14 @@ impl Expr {
         )
     }
 
+    pub fn break_stmt(loc: &dyn HasFileLocation) -> Self {
+        Self::Break(FileLocation::from_loc(loc))
+    }
+
+    pub fn continue_stmt(loc: &dyn HasFileLocation) -> Self {
+        Self::Continue(FileLocation::from_loc(loc))
+    }
+
     pub fn assign(loc: &dyn HasFileLocation, name: String, e: Expr) -> Self {
         Self::Assign(FileLocation::from_loc(loc), name, Box::new(e))
     }
@@ -141,6 +151,8 @@ impl Expr {
             Self::Program(loc, e) => visitor.visit_program(loc, e),
             Self::Block(loc, e) => visitor.visit_block(loc, e),
             Self::While(loc, c, e) => visitor.visit_while(loc, c, e),
+            Self::Break(loc) => visitor.visit_break(loc),
+            Self::Continue(loc) => visitor.visit_continue(loc),
         }
     }
 }

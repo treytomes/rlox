@@ -34,6 +34,7 @@ A flavor of the Lox interpreter from [Crafting Compilers](https://www.craftingin
     - You cannot similarly cascade the `let` statement at this time.
 - The result of the most recent statement will be stored in the `_` variable.
 - Loops will return the final result of their final iteration.
+- `break` and `continue` work in `for` and `while` loops.  Outside of a loop they will bubble up a runtime error.
 
 ### If Expressions
 
